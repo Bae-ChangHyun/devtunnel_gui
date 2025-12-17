@@ -39,18 +39,6 @@ function TunnelCard({ tunnel, onRefresh }: TunnelCardProps) {
     selectTunnel(tunnel);
   }, [selectTunnel, tunnel]);
 
-  const statusColor = useMemo(() => {
-    switch (tunnel.status) {
-      case 'active':
-        return 'bg-green-900 text-green-200';
-      case 'stopped':
-        return 'bg-gray-600 text-gray-200';
-      case 'expired':
-        return 'bg-red-900 text-red-200';
-      default:
-        return 'bg-yellow-900 text-yellow-200';
-    }
-  }, [tunnel.status]);
 
   const expirationInfo = useMemo(() => {
     if (!tunnel.expiresAt) return null;
@@ -67,82 +55,98 @@ function TunnelCard({ tunnel, onRefresh }: TunnelCardProps) {
     return `${daysRemaining} days remaining`;
   }, [tunnel.expiresAt]);
 
+  const statusDotClass = useMemo(() => {
+    switch (tunnel.status) {
+      case 'active':
+        return 'status-dot-active';
+      case 'stopped':
+        return 'status-dot-stopped';
+      case 'expired':
+        return 'status-dot-expired';
+      default:
+        return 'status-dot-stopped';
+    }
+  }, [tunnel.status]);
+
   return (
     <div
       onClick={handleSelect}
-      className="card hover:border-primary-500 cursor-pointer transition-all duration-200 group relative overflow-hidden bg-gray-800/90 hover:shadow-xl hover:shadow-primary-500/10 hover:-translate-y-0.5"
+      className="card hover:bg-dark-600/50 cursor-pointer transition-all duration-200 group relative"
     >
       <div className="relative">
-        <div className="flex items-start justify-between mb-3">
+        {/* Header with status dot */}
+        <div className="flex items-start justify-between mb-4">
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-white truncate text-xl group-hover:text-primary-400 transition-colors duration-200">
-              {tunnel.tunnelId}
-            </h3>
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`status-dot ${statusDotClass}`} />
+              <h3 className="font-semibold text-white truncate text-base group-hover:text-primary-400 transition-colors">
+                {tunnel.tunnelId}
+              </h3>
+            </div>
             {tunnel.description && (
-              <p className="text-sm text-gray-400 mt-1 line-clamp-2">
+              <p className="text-xs text-zinc-500 mt-1.5 line-clamp-2 pl-5">
                 {tunnel.description}
               </p>
             )}
           </div>
-
-          <span className={`badge ${statusColor} ml-2 flex-shrink-0`}>
-            {tunnel.status}
-          </span>
         </div>
 
         {/* Ports */}
-        <div className="flex items-center gap-2 mb-3">
-        <span className="text-sm text-gray-400">Ports:</span>
-        <div className="flex gap-1 flex-wrap">
-          {tunnel.ports.map((port) => (
-            <span
-              key={port}
-              className="px-2 py-1 bg-gray-700 rounded text-sm text-gray-300"
-            >
-              {port}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Tags */}
-      {tunnel.tags && tunnel.tags.length > 0 && (
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm text-gray-400">Tags:</span>
-          <div className="flex gap-1 flex-wrap">
-            {tunnel.tags.map((tag) => (
-              <span
-                key={tag}
-                className="badge badge-info"
-              >
-                {tag}
-              </span>
-            ))}
+        {tunnel.ports.length > 0 && (
+          <div className="mb-4">
+            <span className="text-xs text-zinc-500 uppercase tracking-wider">Ports</span>
+            <div className="flex gap-1.5 flex-wrap mt-2">
+              {tunnel.ports.map((port) => (
+                <span
+                  key={port}
+                  className="px-2.5 py-1 bg-dark-700 rounded-md text-xs text-zinc-300 font-mono"
+                >
+                  {port}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Expiration */}
-      {tunnel.expiresAt && (
-        <div className="text-sm text-gray-400 mb-3">
-          {expirationInfo}
-        </div>
-      )}
+        {/* Tags */}
+        {tunnel.tags && tunnel.tags.length > 0 && (
+          <div className="mb-4">
+            <span className="text-xs text-zinc-500 uppercase tracking-wider">Tags</span>
+            <div className="flex gap-1.5 flex-wrap mt-2">
+              {tunnel.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="badge badge-info"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Expiration */}
+        {tunnel.expiresAt && (
+          <div className="text-xs text-zinc-500 mb-4">
+            {expirationInfo}
+          </div>
+        )}
 
         {/* Actions */}
-        <div className="flex gap-2 mt-4 pt-4 border-t border-gray-700/50">
+        <div className="flex gap-2 mt-4 pt-4 border-t border-zinc-800">
           <button
             onClick={handleManage}
-            className="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-3 py-2 rounded text-sm transition-colors duration-150"
+            className="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-xs font-medium transition-all"
           >
             Manage
           </button>
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="btn-danger text-sm px-3 py-2 transition-colors duration-150"
+            className="px-4 py-2 bg-dark-700 hover:bg-red-500/10 text-zinc-400 hover:text-red-400 rounded-lg text-xs font-medium transition-all disabled:opacity-50"
+            title="Delete tunnel"
           >
-            {isDeleting ? 'Deleting...' : 'Delete'}
+            {isDeleting ? '...' : '🗑'}
           </button>
         </div>
       </div>

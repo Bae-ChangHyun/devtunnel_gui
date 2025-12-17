@@ -37,42 +37,47 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-8 p-8">
       {/* Header Actions */}
-      <div className="flex items-center justify-between bg-gray-800/70 p-6 rounded-xl border border-gray-700/50 shadow-lg">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-4xl font-bold text-white">
-            Tunnels Dashboard
+          <h2 className="text-3xl font-semibold text-white tracking-tight">
+            Tunnels
           </h2>
-          <div className="flex items-center gap-3 mt-2">
-            <p className="text-gray-400">
-              {tunnels.length} tunnel{tunnels.length !== 1 ? 's' : ''} total
+          <div className="flex items-center gap-4 mt-2">
+            <p className="text-sm text-zinc-400">
+              {tunnels.length} total
             </p>
             {tunnels.length > 0 && (
-              <span className="px-3 py-1 bg-green-500/10 text-green-400 rounded-full text-sm border border-green-500/20">
-                {tunnels.filter(t => t.status === 'active').length} active
-              </span>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                <span className="text-sm text-zinc-400">
+                  {tunnels.filter(t => t.status === 'active').length} active
+                </span>
+              </div>
             )}
           </div>
         </div>
 
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="btn-primary flex items-center gap-2 px-6 py-3 transition-colors duration-150"
+          className="btn-primary flex items-center gap-2"
         >
-          <span className="text-xl">+</span>
+          <span>+</span>
           <span>Create Tunnel</span>
         </button>
       </div>
 
       {/* Filter Tags */}
       {allTags.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-gray-400">Filter by tag:</span>
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-xs text-zinc-500 uppercase tracking-wider">Filter:</span>
           <button
             onClick={() => setFilterTag('')}
-            className={`px-3 py-1 rounded-full text-sm ${
-              !filterTag ? 'bg-primary-600 text-white' : 'bg-gray-700 text-gray-300'
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              !filterTag
+                ? 'bg-primary-500/10 text-primary-400 border border-primary-500/20'
+                : 'bg-dark-700 text-zinc-400 hover:bg-dark-600'
             }`}
           >
             All
@@ -81,10 +86,10 @@ export default function Dashboard() {
             <button
               key={tag}
               onClick={() => setFilterTag(tag)}
-              className={`px-3 py-1 rounded-full text-sm ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterTag === tag
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  ? 'bg-primary-500/10 text-primary-400 border border-primary-500/20'
+                  : 'bg-dark-700 text-zinc-400 hover:bg-dark-600'
               }`}
             >
               {tag}
@@ -94,11 +99,11 @@ export default function Dashboard() {
       )}
 
       {/* Tunnels Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredTunnels.length === 0 ? (
-          <div className="col-span-full card text-center py-12">
-            <p className="text-gray-400 text-lg">No tunnels found</p>
-            <p className="text-gray-500 text-sm mt-2">
+          <div className="col-span-full card text-center py-16">
+            <p className="text-zinc-400 text-base">No tunnels found</p>
+            <p className="text-zinc-600 text-sm mt-1.5">
               Create your first tunnel to get started
             </p>
           </div>
