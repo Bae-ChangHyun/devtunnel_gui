@@ -36,10 +36,10 @@ Microsoft DevTunnel은 무료로 사용할 수 있고 제한이 적었지만, **
 
 | 도구              | GUI           | 가격           | 동시 터널 | 플랫폼     | 비고                      |
 |-------------------|---------------|----------------|-----------|------------|---------------------------|
-| **ngrok**         | Web Dashboard | $8-20/월 (유료)| 제한 있음 | 크로스     | GUI 있지만 구독료 필요    |
-| **LocalXpose**    | GUI + CLI     | $8/월 (유료)   | 제한 있음 | 크로스     | 데스크톱 GUI, 유료        |
-| **LocalCan**      | Mac GUI       | $29 (평생)     | 무제한    | Mac 전용   | Mac에서만 작동            |
-| **Cloudflare Tunnel** | Web Dashboard | 무료       | 무제한    | 크로스     | CLI 중심, 설정 복잡       |
+| **[ngrok](https://ngrok.com/pricing)** | Web Dashboard | [$8-20/월](https://ngrok.com/pricing) | 제한 있음 | 크로스     | GUI 있지만 구독료 필요    |
+| **[LocalXpose](https://localxpose.io/pricing)** | GUI + CLI | [$8/월](https://localxpose.io/pricing) | 제한 있음 | 크로스 | 데스크톱 GUI, 유료        |
+| **[LocalCan](https://www.localcan.com)** | Mac GUI | [$67](https://www.localcan.com) (일회성) | 무제한 | Mac 전용 | Mac에서만 작동 |
+| **[Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/)** | Web Dashboard | 무료 | 무제한 | 크로스 | CLI 중심, 설정 복잡 |
 | **DevTunnel CLI** | ❌ CLI만      | **무료**       | 무제한    | 크로스     | GUI 없음, 명령어 복잡     |
 | **DevTunnel GUI** | ✅ 데스크톱   | **무료**       | 무제한    | Linux      | **이 프로젝트** - 무료 GUI |
 
@@ -140,6 +140,33 @@ Microsoft DevTunnel은 무료로 사용할 수 있고 제한이 적었지만, **
 - **경량 목록**: 포트 정보 없이 빠른 로딩
 - **병렬 처리**: 여러 터널 동시 조회
 - **5-10배 성능 향상**: 10개 터널 기준 10초 → 1-2초
+
+## 🚧 Upcoming Features
+
+다음 기능들이 개발 예정입니다:
+
+### 🔐 Token Auto-Refresh
+- **현재 제한사항**: DevTunnel 로그인 토큰이 24시간 후 만료됨
+- **계획**: 자동 토큰 갱신 및 재로그인 알림 기능
+- **예상 효과**:
+  - 24시간 경과 시 자동 감지 및 알림
+  - 원클릭 재로그인 지원
+  - 백그라운드 토큰 갱신 (가능 시)
+
+### 🎨 UI/UX 개선
+- 다크 모드 지원
+- 터널 즐겨찾기 기능
+- 드래그 앤 드롭으로 터널 정렬
+
+### 📁 설정 관리
+- 설정 백업/복원
+- 프로필별 터널 그룹 관리
+- 자동 저장 기능
+
+### 📊 고급 모니터링
+- 트래픽 통계 및 차트
+- 연결 기록 및 분석
+- 알림 시스템 (터널 만료 임박 등)
 
 ## 📋 Prerequisites
 
@@ -360,167 +387,6 @@ rustup update
 npm run tauri build
 ```
 
-<details>
-<summary><h2>💻 Tech Stack</h2></summary>
-
-### Frontend
-- **React 19**: Latest React features
-- **TypeScript**: Type safety
-- **Tailwind CSS 4**: Modern styling
-- **Zustand**: Lightweight state management
-- **Vite 7**: Fast build tool
-
-### Backend
-- **Rust**: Safe and fast native performance
-- **Tauri 2.0**: Lightweight desktop framework
-- **Tokio**: Async runtime for parallel processing
-- **Serde**: JSON serialization
-- **Anyhow**: Error handling
-- **Regex**: CLI output parsing
-
-### Architecture
-- **CLI Wrapper Pattern**: Invokes DevTunnel CLI via `std::process::Command`
-- **IPC Communication**: Tauri invoke system for Frontend ↔ Backend
-- **Event-based Logging**: Real-time logs via Tauri events
-- **Parallel Processing**: tokio JoinSet for concurrent tunnel queries
-
-</details>
-
-<details>
-<summary><h2>⚡ Performance Features</h2></summary>
-
-### Parallel Processing
-- Uses tokio JoinSet for concurrent execution
-- Queries multiple tunnel details simultaneously
-- Automatic parallelism based on CPU cores
-
-### Lightweight Listing
-- Initial load excludes port information
-- Single CLI call for tunnel list
-- Lazy loading of detailed data on user interaction
-
-### Performance Comparison (10 tunnels)
-| Version | Load Time | Improvement |
-|---------|-----------|-------------|
-| v0.0.x (sequential) | ~10 seconds | - |
-| v0.1.0 (parallel) | ~1-2 seconds | **5-10x faster** |
-
-</details>
-
-<details>
-<summary><h2>🏗️ Project Structure</h2></summary>
-
-```
-devtunnel-gui/
-├── src/                          # React frontend
-│   ├── components/
-│   │   ├── Auth/                # Login screen
-│   │   ├── Dashboard/           # Main UI
-│   │   ├── Layout/              # Header, Sidebar
-│   │   ├── Logs/                # Log viewer
-│   │   └── Settings/            # Settings
-│   ├── lib/
-│   │   └── api.ts               # Tauri API wrapper
-│   ├── stores/
-│   │   └── tunnelStore.ts       # Zustand state
-│   ├── types/
-│   │   └── devtunnel.ts         # TypeScript types
-│   └── App.tsx
-├── src-tauri/                    # Rust backend
-│   ├── src/
-│   │   ├── commands.rs          # Tauri command handlers
-│   │   ├── devtunnel.rs         # DevTunnel CLI wrapper
-│   │   ├── parser.rs            # CLI output parser
-│   │   ├── types.rs             # Rust types
-│   │   └── lib.rs               # Entry point
-│   └── Cargo.toml
-└── docs/
-    ├── improvements.md          # Performance improvements
-    └── todo.md                  # Development notes
-```
-
-</details>
-
-## 📦 Release Notes
-
-### v0.2.0 - Security Patches & Quality Improvements (2025-12-17)
-
-This release focuses on critical security fixes and code quality improvements based on comprehensive security audit.
-
-#### 🔒 Security Fixes (P0 - Critical)
-
-1. **Command Injection Prevention**
-   - Added input validation for tunnel IDs in `stop_tunnel` function
-   - Uses regex to allow only safe characters (alphanumeric, dots, hyphens, underscores)
-   - Prevents arbitrary command execution via malicious input
-
-2. **Process Resource Leak Fixed**
-   - Removed `std::mem::forget` that caused zombie processes
-   - Implemented proper process lifecycle management with `HashMap<String, u32>`
-   - Prevents system resource exhaustion during long-term usage
-
-3. **Hardcoded Path Removal**
-   - Removed hardcoded personal path `/home/bch/bin/devtunnel`
-   - Added `which` crate for automatic binary detection
-   - Automatically searches PATH for `devtunnel` binary
-   - Falls back to `DEVTUNNEL_BIN` environment variable
-   - Now works on any user environment
-
-4. **CSP (Content Security Policy) Enabled**
-   - Activated XSS attack prevention via CSP
-   - Applied Tauri 2.0 recommended security policy
-   - Restricts resource loading to trusted sources only
-
-5. **MIT LICENSE File Added**
-   - Created official LICENSE file
-   - Ensures legal clarity and enforceability
-
-#### ✨ Improvements (P1)
-
-6. **Implemented Missing Functions**
-   - `list_ports()`: Now uses JSON parsing with `-j` flag
-   - `list_clusters()`: Now uses JSON parsing with `-j` flag
-   - Safe error handling with fallback to empty arrays
-
-7. **JSON Parsing Support Confirmed**
-   - Verified DevTunnel CLI supports `-j, --json` flag
-   - Documented for future full JSON parsing migration
-
-#### 📊 Impact
-
-- **Security Score**: Improved from 2/10 to 8/10
-- **Production Ready**: Now safe for deployment
-- **Cross-Platform**: Works on any Linux distribution
-- **Stability**: No more zombie processes or resource leaks
-
-#### 🔄 Future Improvements (P1 - Planned)
-
-- Migrate all parsing logic to JSON-based approach
-- Convert AppState to Tauri State for singleton pattern
-
----
-
-### v0.1.0 - Performance Optimization (2025-12-17)
-
-#### ⚡ Performance Improvements
-
-1. **Parallel Processing**
-   - Implemented `enrich_tunnel_details()` with tokio JoinSet
-   - Concurrent tunnel detail fetching
-   - 5-10x faster tunnel list loading
-
-2. **Lightweight Listing**
-   - Added `list_tunnels_light()` for fast initial load
-   - Lazy loading of detailed port information
-   - Reduced initial load time from ~10s to ~1-2s (10 tunnels)
-
-3. **Comprehensive Logging**
-   - Added logs to 18+ commands
-   - Real-time progress tracking in Logs tab
-   - User-friendly error messages
-
----
-
 ## 📄 License & Disclaimer
 
 ### Project License
@@ -549,3 +415,23 @@ Issues and questions: [GitHub Issues](https://github.com/Bae-ChangHyun/devtunnel
 **개발자를 위한, 개발자가 만든 DevTunnel GUI** 💻
 
 Made with ❤️ for developers who need dev tunnels with a GUI
+
+---
+
+## 💻 Tech Stack
+
+### Frontend
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Zustand](https://img.shields.io/badge/Zustand-5.0-FF6B00?style=for-the-badge&logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+
+### Backend
+![Rust](https://img.shields.io/badge/Rust-1.86-000000?style=for-the-badge&logo=rust&logoColor=white)
+![Tauri](https://img.shields.io/badge/Tauri-2.0-FFC131?style=for-the-badge&logo=tauri&logoColor=black)
+![Tokio](https://img.shields.io/badge/Tokio-Async-000000?style=for-the-badge&logo=rust&logoColor=white)
+
+### Tools & Services
+![DevTunnel](https://img.shields.io/badge/DevTunnel-CLI-00A4EF?style=for-the-badge&logo=microsoft&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
