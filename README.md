@@ -1,11 +1,13 @@
-# DevTunnel GUI
+# DevTunnel GUI (Unofficial)
 
-> Microsoft DevTunnel의 비공식 GUI 관리 도구
+> Unofficial GUI Client for Microsoft DevTunnel CLI
 
-Linux 환경에서 Microsoft DevTunnel을 편리하게 관리할 수 있는 데스크톱 애플리케이션입니다.
+Linux 환경에서 Microsoft DevTunnel을 편리하게 관리할 수 있는 **비공식** 데스크톱 애플리케이션입니다.
 
 [![GitHub Release](https://img.shields.io/github/v/release/Bae-ChangHyun/devtunnel_gui)](https://github.com/Bae-ChangHyun/devtunnel_gui/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> **⚠️ Legal Notice**: This is NOT an official Microsoft product. "DevTunnel" and "Microsoft" are trademarks of Microsoft Corporation. This project is an independent GUI wrapper requiring Microsoft DevTunnel CLI.
 
 ---
 
@@ -28,13 +30,64 @@ Microsoft DevTunnel은 무료로 사용할 수 있고 제한이 적었지만, **
 
 ---
 
+## 📊 유사 도구 비교
+
+포트포워딩/터널링 도구는 다양하지만, **무료**이면서 **Linux 데스크톱 GUI**를 제공하는 도구는 거의 없습니다.
+
+| 도구              | GUI           | 가격           | 동시 터널 | 플랫폼     | 비고                      |
+|-------------------|---------------|----------------|-----------|------------|---------------------------|
+| **ngrok**         | Web Dashboard | $8-20/월 (유료)| 제한 있음 | 크로스     | GUI 있지만 구독료 필요    |
+| **LocalXpose**    | GUI + CLI     | $8/월 (유료)   | 제한 있음 | 크로스     | 데스크톱 GUI, 유료        |
+| **LocalCan**      | Mac GUI       | $29 (평생)     | 무제한    | Mac 전용   | Mac에서만 작동            |
+| **Cloudflare Tunnel** | Web Dashboard | 무료       | 무제한    | 크로스     | CLI 중심, 설정 복잡       |
+| **DevTunnel CLI** | ❌ CLI만      | **무료**       | 무제한    | 크로스     | GUI 없음, 명령어 복잡     |
+| **DevTunnel GUI** | ✅ 데스크톱   | **무료**       | 무제한    | Linux      | **이 프로젝트** - 무료 GUI |
+
+### ✅ 이 프로젝트가 필요한 이유
+
+1. **시장 공백 해결**
+   - Microsoft DevTunnel CLI는 무료지만 GUI가 없음
+   - 유료 대안(ngrok, LocalXpose)은 월 구독 비용 발생
+   - Mac 전용 도구(LocalCan)와 달리 **Linux 사용자**를 위한 솔루션
+
+2. **학습 곡선 감소**
+   - CLI 명령어를 외우지 않아도 됨
+   - 직관적인 UI로 터널 생성, 포트 관리, 액세스 제어 설정
+   - 실시간 로그로 문제 해결 시간 단축
+
+3. **팀 협업 지원**
+   - 비개발자(디자이너, PM, QA)도 쉽게 데모 URL 생성 가능
+   - 복잡한 명령어 대신 버튼 클릭으로 터널 호스팅
+   - 태그 시스템으로 프로젝트별 터널 분류
+
+4. **개발 효율성**
+   - 여러 터널을 대시보드에서 한눈에 관리
+   - Webhook 디버깅 시 실시간 로그 확인
+   - 포트 변경, 액세스 제어 수정이 GUI에서 즉시 가능
+
+**참고**: [Best ngrok Alternatives](https://pinggy.io/blog/best_ngrok_alternatives/), [LocalXpose Alternatives](https://localxpose.io/blog/best-ngrok-alternatives)
+
+---
+
 ## ⚠️ Important Notice
 
 **This is NOT an official Microsoft product.**
 
-- Unofficial GUI client wrapping Microsoft DevTunnel CLI
-- Requires Microsoft DevTunnel CLI to be installed separately
-- Microsoft trademarks and DevTunnel are property of Microsoft Corporation
+### Trademark & Legal
+- **"DevTunnel"** and **"Microsoft"** are registered trademarks of Microsoft Corporation
+- This is an **independent, unofficial** GUI client wrapping Microsoft DevTunnel CLI
+- No affiliation, endorsement, or sponsorship by Microsoft
+- Microsoft does not provide support for this project
+
+### Requirements
+- **Requires Microsoft DevTunnel CLI** to be installed separately
+- DevTunnel CLI is available at: https://aka.ms/devtunnels/cli
+- Subject to Microsoft's DevTunnel [Terms of Service](https://aka.ms/devtunnels/tos)
+
+### Use at Your Own Risk
+- This software is provided "as is" without warranty of any kind
+- Not responsible for any issues arising from DevTunnel CLI usage
+- Always comply with Microsoft's acceptable use policies
 
 ## ✨ Features
 
