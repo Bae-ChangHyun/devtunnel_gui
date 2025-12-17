@@ -393,13 +393,23 @@ impl DevTunnelClient {
             .build_command()
             .arg("port")
             .arg("list")
-            .arg(tunnel_id)
+            .arg(&tunnel_id)
+            .arg("-j")  // JSON output
             .output()
             .context("Failed to list ports")?;
 
         if output.status.success() {
-            // Parse port list - simplified
-            Ok(Vec::new())
+            let stdout = String::from_utf8_lossy(&output.stdout);
+
+            // Try to parse as JSON
+            match serde_json::from_str::<Vec<Port>>(&stdout) {
+                Ok(ports) => Ok(ports),
+                Err(e) => {
+                    // If JSON parsing fails, return empty vec with warning
+                    eprintln!("Failed to parse ports JSON for tunnel {}: {}", tunnel_id, e);
+                    Ok(Vec::new())
+                }
+            }
         } else {
             Err(anyhow::anyhow!(
                 "Failed to list ports: {}",
@@ -592,6 +602,7 @@ impl DevTunnelClient {
     pub fn list_clusters(&self, ping: bool) -> Result<Vec<Cluster>> {
         let mut cmd = self.build_command();
         cmd.arg("clusters");
+        cmd.arg("-j");  // JSON output
 
         if ping {
             cmd.arg("--ping");
@@ -602,8 +613,17 @@ impl DevTunnelClient {
             .context("Failed to list clusters")?;
 
         if output.status.success() {
-            // Parse clusters - simplified
-            Ok(Vec::new())
+            let stdout = String::from_utf8_lossy(&output.stdout);
+
+            // Try to parse as JSON
+            match serde_json::from_str::<Vec<Cluster>>(&stdout) {
+                Ok(clusters) => Ok(clusters),
+                Err(e) => {
+                    // If JSON parsing fails, return empty vec with warning
+                    eprintln!("Failed to parse clusters JSON: {}", e);
+                    Ok(Vec::new())
+                }
+            }
         } else {
             Err(anyhow::anyhow!(
                 "Failed to list clusters: {}",
