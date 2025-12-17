@@ -8,6 +8,17 @@ fn emit_log(app: &tauri::AppHandle, message: &str) {
     let _ = app.emit("devtunnel-log", message);
 }
 
+// Helper function to get devtunnel binary path
+// Priority: 1. DEVTUNNEL_BIN env var, 2. which devtunnel, 3. "devtunnel" (fallback to PATH)
+fn get_devtunnel_path() -> String {
+    std::env::var("DEVTUNNEL_BIN")
+        .or_else(|_| {
+            which::which("devtunnel")
+                .map(|p| p.to_string_lossy().to_string())
+        })
+        .unwrap_or_else(|_| "devtunnel".to_string())
+}
+
 #[allow(dead_code)]
 pub struct AppState {
     pub client: Mutex<DevTunnelClient>,
@@ -16,12 +27,8 @@ pub struct AppState {
 #[allow(dead_code)]
 impl AppState {
     pub fn new() -> Self {
-        // Use the devtunnel binary path from environment or default
-        let binary_path = std::env::var("DEVTUNNEL_BIN")
-            .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-
         Self {
-            client: Mutex::new(DevTunnelClient::new(binary_path)),
+            client: Mutex::new(DevTunnelClient::new(get_devtunnel_path())),
         }
     }
 }
@@ -36,9 +43,7 @@ pub fn login_devtunnel(
 ) -> CommandResponse<String> {
     emit_log(&app, &format!("Attempting login with provider: {}", provider));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.login(&provider, use_device_code) {
         Ok(result) => {
@@ -56,9 +61,7 @@ pub fn login_devtunnel(
 pub fn logout_devtunnel(app: tauri::AppHandle) -> CommandResponse<String> {
     emit_log(&app, "Logging out...");
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.logout() {
         Ok(result) => {
@@ -76,9 +79,7 @@ pub fn logout_devtunnel(app: tauri::AppHandle) -> CommandResponse<String> {
 pub fn get_user_info(app: tauri::AppHandle) -> CommandResponse<UserInfo> {
     emit_log(&app, "Checking user authentication status...");
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.get_user_info() {
         Ok(info) => {
@@ -100,9 +101,7 @@ pub fn create_tunnel(app: tauri::AppHandle, req: CreateTunnelRequest) -> Command
     let tunnel_id = req.tunnel_id.as_deref().unwrap_or("auto-generated");
     emit_log(&app, &format!("Creating tunnel: {}", tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.create_tunnel(req.clone()) {
         Ok(result) => {
@@ -120,9 +119,7 @@ pub fn create_tunnel(app: tauri::AppHandle, req: CreateTunnelRequest) -> Command
 pub fn list_tunnels(app: tauri::AppHandle, req: Option<ListTunnelsRequest>) -> CommandResponse<Vec<TunnelListItem>> {
     emit_log(&app, "Loading tunnel list...");
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.list_tunnels(req) {
         Ok(tunnels) => {
@@ -141,9 +138,7 @@ pub fn list_tunnels(app: tauri::AppHandle, req: Option<ListTunnelsRequest>) -> C
 pub fn list_tunnels_light(app: tauri::AppHandle, req: Option<ListTunnelsRequest>) -> CommandResponse<Vec<TunnelListItem>> {
     emit_log(&app, "Loading tunnel list (light mode)...");
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.list_tunnels_light(req) {
         Ok(tunnels) => {
@@ -162,9 +157,7 @@ pub fn list_tunnels_light(app: tauri::AppHandle, req: Option<ListTunnelsRequest>
 pub async fn enrich_tunnel_details(app: tauri::AppHandle, tunnel_ids: Vec<String>) -> CommandResponse<Vec<TunnelListItem>> {
     emit_log(&app, &format!("Enriching details for {} tunnel(s)...", tunnel_ids.len()));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.enrich_tunnel_details(tunnel_ids).await {
         Ok(tunnels) => {
@@ -183,9 +176,7 @@ pub fn show_tunnel(app: tauri::AppHandle, tunnel_id: Option<String>) -> CommandR
     let id_str = tunnel_id.as_deref().unwrap_or("current").to_string();
     emit_log(&app, &format!("Fetching details for tunnel: {}", id_str));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.show_tunnel(tunnel_id) {
         Ok(result) => {
@@ -203,9 +194,7 @@ pub fn show_tunnel(app: tauri::AppHandle, tunnel_id: Option<String>) -> CommandR
 pub fn update_tunnel(app: tauri::AppHandle, req: UpdateTunnelRequest) -> CommandResponse<String> {
     emit_log(&app, &format!("Updating tunnel: {}", req.tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.update_tunnel(req.clone()) {
         Ok(result) => {
@@ -223,9 +212,7 @@ pub fn update_tunnel(app: tauri::AppHandle, req: UpdateTunnelRequest) -> Command
 pub fn delete_tunnel(app: tauri::AppHandle, tunnel_id: String) -> CommandResponse<String> {
     emit_log(&app, &format!("Deleting tunnel: {}", tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.delete_tunnel(tunnel_id.clone()) {
         Ok(result) => {
@@ -243,9 +230,7 @@ pub fn delete_tunnel(app: tauri::AppHandle, tunnel_id: String) -> CommandRespons
 pub fn delete_all_tunnels(app: tauri::AppHandle) -> CommandResponse<String> {
     emit_log(&app, "Deleting all tunnels...");
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.delete_all_tunnels() {
         Ok(result) => {
@@ -264,9 +249,7 @@ pub async fn host_tunnel(app: tauri::AppHandle, req: HostTunnelRequest) -> Comma
     let tunnel_id = req.tunnel_id.as_deref().unwrap_or("unknown");
     emit_log(&app, &format!("Starting tunnel host: {}", tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.host_tunnel(req.clone()).await {
         Ok(_) => {
@@ -284,9 +267,7 @@ pub async fn host_tunnel(app: tauri::AppHandle, req: HostTunnelRequest) -> Comma
 pub fn stop_tunnel(app: tauri::AppHandle, tunnel_id: String) -> CommandResponse<String> {
     emit_log(&app, &format!("Stopping tunnel: {}", tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.stop_tunnel(tunnel_id.clone()) {
         Ok(result) => {
@@ -305,9 +286,7 @@ pub async fn restart_tunnel(app: tauri::AppHandle, req: HostTunnelRequest) -> Co
     let tunnel_id = req.tunnel_id.clone().unwrap_or_else(|| "unknown".to_string());
     emit_log(&app, &format!("Restarting tunnel: {}", tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.restart_tunnel(req).await {
         Ok(result) => {
@@ -323,9 +302,7 @@ pub async fn restart_tunnel(app: tauri::AppHandle, req: HostTunnelRequest) -> Co
 
 #[tauri::command]
 pub fn get_tunnel_start_time(tunnel_id: String) -> CommandResponse<String> {
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.get_tunnel_start_time(tunnel_id) {
         Ok(start_time) => CommandResponse::success(start_time),
@@ -337,9 +314,7 @@ pub fn get_tunnel_start_time(tunnel_id: String) -> CommandResponse<String> {
 pub fn ping_port(app: tauri::AppHandle, url: String) -> CommandResponse<crate::types::PingResult> {
     emit_log(&app, &format!("Pinging port: {}", url));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.ping_port(url.clone()) {
         Ok(result) => {
@@ -359,9 +334,7 @@ pub fn ping_port(app: tauri::AppHandle, url: String) -> CommandResponse<crate::t
 pub fn create_port(app: tauri::AppHandle, req: CreatePortRequest) -> CommandResponse<String> {
     emit_log(&app, &format!("Creating port {} on tunnel {}", req.port_number, req.tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.create_port(req.clone()) {
         Ok(result) => {
@@ -379,9 +352,7 @@ pub fn create_port(app: tauri::AppHandle, req: CreatePortRequest) -> CommandResp
 pub fn list_ports(app: tauri::AppHandle, tunnel_id: String) -> CommandResponse<Vec<Port>> {
     emit_log(&app, &format!("Listing ports for tunnel: {}", tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.list_ports(tunnel_id.clone()) {
         Ok(ports) => {
@@ -399,9 +370,7 @@ pub fn list_ports(app: tauri::AppHandle, tunnel_id: String) -> CommandResponse<V
 pub fn show_port(app: tauri::AppHandle, tunnel_id: String, port_number: u16) -> CommandResponse<Port> {
     emit_log(&app, &format!("Fetching port {} details for tunnel: {}", port_number, tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.show_port(tunnel_id.clone(), port_number) {
         Ok(port) => {
@@ -418,9 +387,7 @@ pub fn show_port(app: tauri::AppHandle, tunnel_id: String, port_number: u16) -> 
 #[tauri::command]
 pub fn update_port(app: tauri::AppHandle, req: UpdatePortRequest) -> CommandResponse<String> {
     emit_log(&app, &format!("Updating port {} on tunnel {}", req.port_number, req.tunnel_id));
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.update_port(req.clone()) {
         Ok(result) => {
@@ -438,9 +405,7 @@ pub fn update_port(app: tauri::AppHandle, req: UpdatePortRequest) -> CommandResp
 pub fn delete_port(app: tauri::AppHandle, tunnel_id: String, port: u16) -> CommandResponse<String> {
     emit_log(&app, &format!("Deleting port {} from tunnel {}", port, tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.delete_port(tunnel_id.clone(), port) {
         Ok(result) => {
@@ -460,9 +425,7 @@ pub fn delete_port(app: tauri::AppHandle, tunnel_id: String, port: u16) -> Comma
 pub fn create_access(app: tauri::AppHandle, req: CreateAccessRequest) -> CommandResponse<String> {
     emit_log(&app, &format!("Creating access for tunnel: {}", req.tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.create_access(req.clone()) {
         Ok(result) => {
@@ -480,9 +443,7 @@ pub fn create_access(app: tauri::AppHandle, req: CreateAccessRequest) -> Command
 pub fn list_access(app: tauri::AppHandle, tunnel_id: String) -> CommandResponse<String> {
     emit_log(&app, &format!("Listing access for tunnel: {}", tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.list_access(tunnel_id.clone()) {
         Ok(result) => {
@@ -500,9 +461,7 @@ pub fn list_access(app: tauri::AppHandle, tunnel_id: String) -> CommandResponse<
 pub fn reset_access(app: tauri::AppHandle, tunnel_id: String) -> CommandResponse<String> {
     emit_log(&app, &format!("Resetting access for tunnel: {}", tunnel_id));
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.reset_access(tunnel_id.clone()) {
         Ok(result) => {
@@ -522,9 +481,7 @@ pub fn reset_access(app: tauri::AppHandle, tunnel_id: String) -> CommandResponse
 pub fn list_clusters(app: tauri::AppHandle, ping: bool) -> CommandResponse<Vec<Cluster>> {
     emit_log(&app, "Fetching available clusters...");
 
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
+    let client = DevTunnelClient::new(get_devtunnel_path());
 
     match client.list_clusters(ping) {
         Ok(clusters) => {
