@@ -707,11 +707,15 @@ impl DevTunnelClient {
 
     // Stop hosting tunnel by killing the devtunnel host process
     pub fn stop_tunnel(&self, tunnel_id: String) -> Result<String> {
-        // Validate tunnel_id to prevent command injection
+        // SECURITY: Validate tunnel_id to prevent command injection
         // Tunnel IDs should only contain alphanumeric characters, dots, hyphens, and underscores
+        // This prevents wildcards, shell metacharacters, and other potentially dangerous inputs
         let valid_id = regex::Regex::new(r"^[a-zA-Z0-9.\-_]+$").unwrap();
         if !valid_id.is_match(&tunnel_id) {
-            return Err(anyhow::anyhow!("Invalid tunnel ID format: contains potentially dangerous characters"));
+            return Err(anyhow::anyhow!(
+                "Invalid tunnel ID format: contains potentially dangerous characters. \
+                Only alphanumeric, dots, hyphens, and underscores are allowed."
+            ));
         }
 
         #[cfg(target_os = "linux")]
@@ -756,6 +760,8 @@ impl DevTunnelClient {
         #[cfg(target_os = "windows")]
         {
             // Use taskkill on Windows
+            // SECURITY: tunnel_id has been validated with regex above to prevent injection
+            // Only alphanumeric, dots, hyphens, and underscores are allowed
             let output = Command::new("taskkill")
                 .arg("/F")
                 .arg("/FI")

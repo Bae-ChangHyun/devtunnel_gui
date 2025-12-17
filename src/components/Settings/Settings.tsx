@@ -1,13 +1,26 @@
 import { useState, useEffect } from 'react';
+import { getVersion } from '@tauri-apps/api/app';
 import { systemApi, type DevTunnelInfo } from '../../lib/api';
 
 export default function Settings() {
   const [devTunnelInfo, setDevTunnelInfo] = useState<DevTunnelInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [appVersion, setAppVersion] = useState<string>('Loading...');
 
   useEffect(() => {
     checkInstallation();
+    loadAppVersion();
   }, []);
+
+  const loadAppVersion = async () => {
+    try {
+      const version = await getVersion();
+      setAppVersion(version);
+    } catch (error) {
+      console.error('Failed to get app version:', error);
+      setAppVersion('Unknown');
+    }
+  };
 
   const checkInstallation = async () => {
     setIsLoading(true);
@@ -102,9 +115,9 @@ export default function Settings() {
                   <div>
                     <p className="text-white font-medium mb-1">3. Add to PATH (if needed)</p>
                     <p className="text-gray-400 mb-2">
-                      If the command is not found, add the devtunnel binary to your PATH or place it at:
+                      If the command is not found, add the devtunnel binary to your PATH, or set the DEVTUNNEL_BIN environment variable:
                     </p>
-                    <code className="block bg-gray-800 px-3 py-2 rounded">/home/bch/bin/devtunnel</code>
+                    <code className="block bg-gray-800 px-3 py-2 rounded">export DEVTUNNEL_BIN=/path/to/devtunnel</code>
                   </div>
                   <div>
                     <p className="text-white font-medium mb-1">4. Restart this application</p>
@@ -137,7 +150,7 @@ export default function Settings() {
         <div className="card">
           <h2 className="text-xl font-semibold text-white mb-4">About</h2>
           <div className="space-y-2 text-gray-400">
-            <p><span className="text-white">Version:</span> 0.1.0</p>
+            <p><span className="text-white">Version:</span> {appVersion}</p>
             <p><span className="text-white">DevTunnel GUI Manager</span></p>
             <p className="text-sm">A graphical interface for Microsoft DevTunnel CLI</p>
           </div>

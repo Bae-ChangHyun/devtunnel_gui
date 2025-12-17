@@ -509,8 +509,7 @@ pub fn check_devtunnel_installation() -> CommandResponse<DevTunnelInfo> {
     use std::process::Command;
 
     // Try to find devtunnel binary
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
+    let binary_path = get_devtunnel_path();
 
     // Check if the binary exists and is executable
     let path_obj = std::path::Path::new(&binary_path);
