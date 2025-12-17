@@ -3,18 +3,20 @@ use crate::parser;
 use anyhow::{Context, Result};
 use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 use tokio::process::Command as TokioCommand;
 
 pub struct DevTunnelClient {
     binary_path: String,
-    active_hosts: Arc<Mutex<Vec<String>>>,
+    // Maps tunnel_id to process_id for tracking active host processes
+    active_processes: Arc<Mutex<HashMap<String, u32>>>,
 }
 
 impl DevTunnelClient {
     pub fn new(binary_path: String) -> Self {
         Self {
             binary_path,
-            active_hosts: Arc::new(Mutex::new(Vec::new())),
+            active_processes: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -655,18 +657,19 @@ impl DevTunnelClient {
                 ));
             }
             Ok(None) => {
-                // Process is still running, detach it
-                std::mem::forget(child);
+                // Process is still running, store its PID for tracking
+                if let Some(id) = &req.tunnel_id {
+                    if let Some(pid) = child.id() {
+                        let mut processes = self.active_processes.lock().unwrap();
+                        processes.insert(id.clone(), pid);
+                    }
+                }
+                // Child will be dropped here, but the process continues running
+                // because stdout/stderr are set to null (not piped)
             }
             Err(e) => {
                 return Err(anyhow::anyhow!("Failed to check process status: {}", e));
             }
-        }
-
-        // Store the tunnel ID for tracking
-        if let Some(id) = &req.tunnel_id {
-            let mut hosts = self.active_hosts.lock().unwrap();
-            hosts.push(id.clone());
         }
 
         Ok(())
@@ -674,7 +677,12 @@ impl DevTunnelClient {
 
     #[allow(dead_code)]
     pub fn get_active_hosts(&self) -> Vec<String> {
-        self.active_hosts.lock().unwrap().clone()
+        self.active_processes
+            .lock()
+            .unwrap()
+            .keys()
+            .cloned()
+            .collect()
     }
 
     // Stop hosting tunnel by killing the devtunnel host process
@@ -694,9 +702,9 @@ impl DevTunnelClient {
                 .output()
                 .context("Failed to execute pkill")?;
 
-            // Remove from active hosts tracking
-            let mut hosts = self.active_hosts.lock().unwrap();
-            hosts.retain(|id| id != &tunnel_id);
+            // Remove from active process tracking
+            let mut processes = self.active_processes.lock().unwrap();
+            processes.remove(&tunnel_id);
 
             // pkill returns 0 if processes were killed, 1 if no processes matched
             if output.status.success() {
@@ -715,8 +723,8 @@ impl DevTunnelClient {
                 .output()
                 .context("Failed to execute pkill")?;
 
-            let mut hosts = self.active_hosts.lock().unwrap();
-            hosts.retain(|id| id != &tunnel_id);
+            let mut processes = self.active_processes.lock().unwrap();
+            processes.remove(&tunnel_id);
 
             if output.status.success() {
                 Ok(format!("Tunnel {} stopped successfully", tunnel_id))
@@ -735,8 +743,8 @@ impl DevTunnelClient {
                 .output()
                 .context("Failed to execute taskkill")?;
 
-            let mut hosts = self.active_hosts.lock().unwrap();
-            hosts.retain(|id| id != &tunnel_id);
+            let mut processes = self.active_processes.lock().unwrap();
+            processes.remove(&tunnel_id);
 
             if output.status.success() {
                 Ok(format!("Tunnel {} stopped successfully", tunnel_id))
