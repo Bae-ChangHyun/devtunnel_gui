@@ -7,6 +7,9 @@ interface LogEntry {
   message: string;
 }
 
+// Maximum number of logs to keep in memory to prevent memory leaks
+const MAX_LOGS = 1000;
+
 export default function LogsViewer() {
   const [logs, setLogs] = useState<LogEntry[]>([
     { timestamp: new Date().toISOString(), level: 'INFO', message: 'DevTunnel GUI started' },
@@ -28,7 +31,11 @@ export default function LogsViewer() {
         message: message,
       };
 
-      setLogs(prev => [...prev, logEntry]);
+      // Keep only the most recent MAX_LOGS entries to prevent memory leaks
+      setLogs(prev => {
+        const newLogs = [...prev, logEntry];
+        return newLogs.length > MAX_LOGS ? newLogs.slice(-MAX_LOGS) : newLogs;
+      });
     });
 
     return () => {

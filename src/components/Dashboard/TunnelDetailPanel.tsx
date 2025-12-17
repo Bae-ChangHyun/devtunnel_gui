@@ -5,6 +5,9 @@ import { toast } from '../Toast';
 import PortManager from './PortManager';
 import AccessControlManager from './AccessControlManager';
 
+// Configuration constants
+const TUNNEL_REFRESH_DELAY_MS = 2000; // Wait time before refreshing tunnel details after host/restart
+
 // Chevron Down Icon Component
 function ChevronDownIcon({ className = '' }: { className?: string }) {
   return (
@@ -92,7 +95,7 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
       // Refresh tunnel details to show URLs
       setTimeout(() => {
         loadTunnelDetails();
-      }, 2000);
+      }, TUNNEL_REFRESH_DELAY_MS);
     } catch (error) {
       toast.error(`Failed to host tunnel: ${error}`);
     } finally {
@@ -120,7 +123,7 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
       // Refresh tunnel details to show new start time
       setTimeout(() => {
         loadTunnelDetails();
-      }, 2000);
+      }, TUNNEL_REFRESH_DELAY_MS);
     } catch (error) {
       toast.error(`Failed to restart tunnel: ${error}`);
     } finally {

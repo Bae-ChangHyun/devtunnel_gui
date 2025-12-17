@@ -36,3 +36,8 @@ Cargo.lock
 
 # Project-specific
 CLAUDE.md
+
+# Backup files
+*.backup
+*.bak
+*~

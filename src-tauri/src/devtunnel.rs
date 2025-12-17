@@ -6,6 +6,10 @@ use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use tokio::process::Command as TokioCommand;
 
+// Configuration constants
+const PROCESS_START_DELAY_MS: u64 = 1500; // Wait time after starting a host process
+const PROCESS_STOP_DELAY_MS: u64 = 500;   // Wait time after stopping a process before restart
+
 pub struct DevTunnelClient {
     binary_path: String,
     // Maps tunnel_id to process_id for tracking active host processes
@@ -666,7 +670,7 @@ impl DevTunnelClient {
             .context("Failed to spawn devtunnel host")?;
 
         // Give it a moment to start
-        tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(PROCESS_START_DELAY_MS)).await;
 
         // Check if process is still running
         match child.try_wait() {
@@ -787,7 +791,7 @@ impl DevTunnelClient {
             let _ = self.stop_tunnel(tunnel_id.clone());
 
             // Wait a moment for the process to fully terminate
-            tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+            tokio::time::sleep(tokio::time::Duration::from_millis(PROCESS_STOP_DELAY_MS)).await;
 
             // Start hosting again
             self.host_tunnel(req).await?;
