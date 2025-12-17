@@ -7,6 +7,27 @@ Linux 환경에서 Microsoft DevTunnel을 편리하게 관리할 수 있는 데�
 [![GitHub Release](https://img.shields.io/github/v/release/Bae-ChangHyun/devtunnel_gui)](https://github.com/Bae-ChangHyun/devtunnel_gui/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+---
+
+## 🎨 Built with Claude Code
+
+이 프로젝트는 [Claude Code](https://claude.ai/claude-code)를 활용한 **Vibe Coding** 방식으로 개발되었습니다.
+
+### 💡 프로젝트 배경
+
+로컬 개발 환경에서 작업한 웹 애플리케이션, API 서버, 데모 사이트 등을 외부에서 테스트해야 하는 상황이 빈번하게 발생했습니다. 포트포워딩 솔루션이 필요했지만, ngrok, localtunnel 등의 서비스는 무료 플랜에서 **동시 터널 개수 제한**이 있어 여러 프로젝트를 동시에 테스트하기 어려웠습니다.
+
+Microsoft DevTunnel은 무료로 사용할 수 있고 제한이 적었지만, **CLI 기반**이라 여러 터널을 관리하고 포트 설정을 변경하는 것이 번거로웠습니다. 특히 Linux 환경에서는 GUI 도구가 전무했기 때문에, 생산성 향상을 위해 이 프로젝트를 시작하게 되었습니다.
+
+### 🚀 개발 방식
+
+- **Claude Code**를 활용한 대화형 개발
+- 요구사항을 자연어로 전달하고 실시간으로 피드백
+- 보안 취약점 분석 및 코드 리뷰 자동화
+- 성능 최적화 및 아키텍처 설계 지원
+
+---
+
 ## ⚠️ Important Notice
 
 **This is NOT an official Microsoft product.**
