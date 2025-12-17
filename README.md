@@ -1,437 +1,170 @@
+
 # DevTunnel GUI (Unofficial)
 
-> Unofficial GUI Client for Microsoft DevTunnel CLI
+<div align="center">
 
-Linux 환경에서 Microsoft DevTunnel을 편리하게 관리할 수 있는 **비공식** 데스크톱 애플리케이션입니다.
+![Logo](https://via.placeholder.com/150?text=DevTunnel+GUI) **Linux 환경을 위한 Microsoft DevTunnel 비공식 GUI 클라이언트**
+<br/>
+CLI의 복잡함 없이, 무료로 무제한 터널링을 경험하세요.
 
-[![GitHub Release](https://img.shields.io/github/v/release/Bae-ChangHyun/devtunnel_gui)](https://github.com/Bae-ChangHyun/devtunnel_gui/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Release](https://img.shields.io/github/v/release/Bae-ChangHyun/devtunnel_gui?style=flat-square&color=blue)](https://github.com/Bae-ChangHyun/devtunnel_gui/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Platform](https://img.shields.io/badge/Platform-Linux-orange?style=flat-square&logo=linux)](https://github.com/Bae-ChangHyun/devtunnel_gui)
+[![Built with Claude](https://img.shields.io/badge/Built%20with-Claude%20Code-D97757?style=flat-square&logo=anthropic)](https://claude.ai)
 
-> **⚠️ Legal Notice**: This is NOT an official Microsoft product. "DevTunnel" and "Microsoft" are trademarks of Microsoft Corporation. This project is an independent GUI wrapper requiring Microsoft DevTunnel CLI.
+[다운로드 (AppImage / Deb)](https://github.com/Bae-ChangHyun/devtunnel_gui/releases) • [버그 신고](https://github.com/Bae-ChangHyun/devtunnel_gui/issues)
 
----
-
-## 🎨 Built with Claude Code
-
-이 프로젝트는 [Claude Code](https://claude.ai/claude-code)를 활용한 **Vibe Coding** 방식으로 개발되었습니다.
-
-### 💡 프로젝트 배경
-
-로컬 개발 환경에서 작업한 웹 애플리케이션, API 서버, 데모 사이트 등을 외부에서 테스트해야 하는 상황이 빈번하게 발생했습니다. 포트포워딩 솔루션이 필요했지만, ngrok, localtunnel 등의 서비스는 무료 플랜에서 **동시 터널 개수 제한**이 있어 여러 프로젝트를 동시에 테스트하기 어려웠습니다.
-
-Microsoft DevTunnel은 무료로 사용할 수 있고 제한이 적었지만, **CLI 기반**이라 여러 터널을 관리하고 포트 설정을 변경하는 것이 번거로웠습니다. 특히 Linux 환경에서는 GUI 도구가 전무했기 때문에, 생산성 향상을 위해 이 프로젝트를 시작하게 되었습니다.
-
-### 🚀 개발 방식
-
-- **Claude Code**를 활용한 대화형 개발
-- 요구사항을 자연어로 전달하고 실시간으로 피드백
-- 보안 취약점 분석 및 코드 리뷰 자동화
-- 성능 최적화 및 아키텍처 설계 지원
+</div>
 
 ---
 
-## 📊 유사 도구 비교
-
-포트포워딩/터널링 도구는 다양하지만, **무료**이면서 **Linux 데스크톱 GUI**를 제공하는 도구는 거의 없습니다.
-
-| 도구              | GUI           | 가격           | 동시 터널 | 플랫폼     | 비고                      |
-|-------------------|---------------|----------------|-----------|------------|---------------------------|
-| **[ngrok](https://ngrok.com/pricing)** | Web Dashboard | [$8-20/월](https://ngrok.com/pricing) | 제한 있음 | 크로스     | GUI 있지만 구독료 필요    |
-| **[LocalXpose](https://localxpose.io/pricing)** | GUI + CLI | [$8/월](https://localxpose.io/pricing) | 제한 있음 | 크로스 | 데스크톱 GUI, 유료        |
-| **[LocalCan](https://www.localcan.com)** | Mac GUI | [$67](https://www.localcan.com) (일회성) | 무제한 | Mac 전용 | Mac에서만 작동 |
-| **[Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/)** | Web Dashboard | 무료 | 무제한 | 크로스 | CLI 중심, 설정 복잡 |
-| **DevTunnel CLI** | ❌ CLI만      | **무료**       | 무제한    | 크로스     | GUI 없음, 명령어 복잡     |
-| **DevTunnel GUI** | ✅ 데스크톱   | **무료**       | 무제한    | Linux      | **이 프로젝트** - 무료 GUI |
-
-### ✅ 이 프로젝트가 필요한 이유
-
-1. **시장 공백 해결**
-   - Microsoft DevTunnel CLI는 무료지만 GUI가 없음
-   - 유료 대안(ngrok, LocalXpose)은 월 구독 비용 발생
-   - Mac 전용 도구(LocalCan)와 달리 **Linux 사용자**를 위한 솔루션
-
-2. **학습 곡선 감소**
-   - CLI 명령어를 외우지 않아도 됨
-   - 직관적인 UI로 터널 생성, 포트 관리, 액세스 제어 설정
-   - 실시간 로그로 문제 해결 시간 단축
-
-3. **팀 협업 지원**
-   - 비개발자(디자이너, PM, QA)도 쉽게 데모 URL 생성 가능
-   - 복잡한 명령어 대신 버튼 클릭으로 터널 호스팅
-   - 태그 시스템으로 프로젝트별 터널 분류
-
-4. **개발 효율성**
-   - 여러 터널을 대시보드에서 한눈에 관리
-   - Webhook 디버깅 시 실시간 로그 확인
-   - 포트 변경, 액세스 제어 수정이 GUI에서 즉시 가능
-
-**참고**: [Best ngrok Alternatives](https://pinggy.io/blog/best_ngrok_alternatives/), [LocalXpose Alternatives](https://localxpose.io/blog/best-ngrok-alternatives)
+> **⚠️ Legal Notice**<br/>
+> This is **NOT** an official Microsoft product. "DevTunnel" and "Microsoft" are trademarks of Microsoft Corporation. This project is an independent GUI wrapper requiring Microsoft DevTunnel CLI. [Read Disclaimer](#-license--disclaimer)
 
 ---
 
-## ⚠️ Important Notice
+## 📖 Introduction
 
-**This is NOT an official Microsoft product.**
+**DevTunnel GUI**는 Microsoft의 강력한 DevTunnel을 Linux 데스크톱에서 쉽고 편리하게 사용할 수 있도록 돕는 도구입니다.
 
-### Trademark & Legal
-- **"DevTunnel"** and **"Microsoft"** are registered trademarks of Microsoft Corporation
-- This is an **independent, unofficial** GUI client wrapping Microsoft DevTunnel CLI
-- No affiliation, endorsement, or sponsorship by Microsoft
-- Microsoft does not provide support for this project
+로컬 개발 환경(Web App, API Server 등)을 외부에 공유해야 할 때, 기존 솔루션들의 **비용 문제**나 **동시 터널 제한** 때문에 고민하셨나요? Microsoft DevTunnel은 훌륭한 무료 대안이지만, **CLI 명령어**를 일일이 입력해야 하는 불편함이 있었습니다.
 
-### Requirements
-- **Requires Microsoft DevTunnel CLI** to be installed separately
-- DevTunnel CLI is available at: https://aka.ms/devtunnels/cli
-- Subject to Microsoft's DevTunnel [Terms of Service](https://aka.ms/devtunnels/tos)
+이 프로젝트는 이러한 불편함을 해소하고, **클릭 몇 번으로 터널을 생성, 관리, 모니터링**할 수 있는 직관적인 GUI를 제공합니다.
 
-### Use at Your Own Risk
-- This software is provided "as is" without warranty of any kind
-- Not responsible for any issues arising from DevTunnel CLI usage
-- Always comply with Microsoft's acceptable use policies
+### 🎨 Developed via Vibe Coding
+이 프로젝트는 **[Claude Code](https://claude.ai/claude-code)**와의 협업을 통해 **Vibe Coding** 방식으로 개발되었습니다. 기획부터 구현까지 AI와 함께하며 개발 생산성의 새로운 가능성을 탐구한 결과물입니다.
+
+---
+
+## 📸 Screenshots
+
+<div align="center">
+  <img src="https://via.placeholder.com/800x500?text=Dashboard+Screenshot" alt="Dashboard" width="800"/>
+  <br/>
+  <em>직관적인 대시보드에서 모든 터널을 한눈에 관리하세요.</em>
+</div>
+
+---
+
+## 📊 Why DevTunnel GUI?
+
+포트포워딩 도구는 많지만, **무료**이면서 **Linux GUI**를 지원하는 도구는 찾기 힘듭니다.
+
+| 도구 | GUI 지원 | 가격 | 동시 터널 | 플랫폼 | 비고 |
+|:---:|:---:|:---:|:---:|:---:|:---|
+| **DevTunnel GUI** | ✅ **Linux** | **무료** | **무제한** | Linux | **본 프로젝트** (CLI 래퍼) |
+| **DevTunnel CLI** | ❌ CLI Only | 무료 | 무제한 | Cross | 명령어 암기 필요 |
+| **ngrok** | Web UI | [$8-20/월](https://ngrok.com/pricing) | 제한 있음 | Cross | 무료 플랜 제한 많음 |
+| **LocalXpose** | ✅ GUI | [$8/월](https://localxpose.io/pricing) | 제한 있음 | Cross | 데스크톱 GUI 유료 |
+| **LocalCan** | ✅ Mac | [$67](https://www.localcan.com) | 무제한 | Mac Only | Mac 전용 유료 앱 |
+| **Cloudflare** | Web UI | 무료 | 무제한 | Cross | 설정이 다소 복잡함 |
+
+### ✨ Key Benefits
+- **No Monthly Fee**: Microsoft 계정만 있으면 100% 무료
+- **GUI Convenience**: 복잡한 CLI 명령어를 외울 필요 없음
+- **Real-time Logs**: 연결 상태와 요청 로그를 실시간 시각화
+- **Tag System**: 프로젝트별(Production, Staging) 터널 태그 분류
+- **Access Control**: 익명, 조직 전용, 토큰 기반 등 세밀한 권한 제어
+
+---
 
 ## ✨ Features
 
-### 🔐 Authentication
-- Microsoft 계정 또는 GitHub 계정으로 로그인
-- 디바이스 코드 인증 지원
-- 인증 상태 실시간 확인
+### 🚇 Tunnel & Port Management
+* **Easy Creation**: 커스텀 ID, 설명, 태그를 통한 손쉬운 터널 생성
+* **Hosting**: 로컬 포트(HTTP/HTTPS)를 즉시 인터넷에 노출
+* **Protocol**: Auto, HTTP, HTTPS 프로토콜 지원
+* **Deep Linking**: 생성된 터널 URL 원클릭 복사 및 열기
 
-### 🚇 Tunnel Management
-- **터널 생성**: 커스텀 ID, 설명, 태그 지정
-- **터널 목록**: 모든 터널을 한눈에 확인
-- **터널 상세 정보**: 포트, 도메인, 만료 시간
-- **터널 삭제**: 개별 또는 전체 삭제
-- **터널 호스팅**: 로컬 포트를 인터넷에 노출
-- **실시간 제어**: 중지/재시작 지원
+### 🛡️ Security & Access
+* **Authentication**: Microsoft 또는 GitHub 계정 로그인 지원
+* **Access Presets**:
+    * `Public Demo`: 24시간 익명 접속 허용
+    * `Team Access`: 같은 조직 구성원만 접근
+    * `Client Preview`: 보안 토큰 기반 접근 제한
 
-### 🔌 Port Management
-- **프로토콜 선택**: HTTP/HTTPS/Auto
-- **포트 설명**: 각 포트의 용도 문서화
-- **공개 URL**: 자동 생성된 접근 URL
-- **포트 핑**: 연결 상태 실시간 확인
+### ⚡ Performance & Monitoring
+* **Real-time Dashboard**: 터널 상태(Active/Stopped) 및 만료 시간 자동 추적
+* **Live Logging**: INFO, WARN, ERROR 레벨별 로그 및 타임스탬프 기록
+* **Fast Loading**: 병렬 처리를 통한 빠른 목록 조회 (기존 대비 5-10배 향상)
 
-### 🛡️ Access Control
-- **익명 액세스**: 누구나 접근 가능
-- **조직 기반**: 특정 조직 구성원만 허용
-- **토큰 기반**: 보안 토큰으로 접근 제한
-- **포트별 권한**: 각 포트마다 다른 설정
-- **프리셋 템플릿**:
-  - Public Demo (24시간 익명 액세스)
-  - Team Access (조직 전용)
-  - Client Preview (토큰 기반)
-
-### 🏷️ Tag System
-- 터널을 태그로 분류 (예: production, staging, development)
-- 태그별 필터링으로 빠른 검색
-- 여러 태그 동시 지정
-
-### 📊 Real-time Monitoring
-- 터널 상태 시각화 (Active/Stopped/Expired)
-- 만료 시간 자동 추적
-- 대시보드에서 전체 현황 확인
-
-### 📝 Live Logging
-- 모든 작업의 실시간 로그 표시
-- 레벨별 구분 (INFO, WARN, ERROR, DEBUG)
-- 타임스탬프와 상세 기록
-- 자동 스크롤 및 로그 클리어
-
-### ⚡ Performance
-- **경량 목록**: 포트 정보 없이 빠른 로딩
-- **병렬 처리**: 여러 터널 동시 조회
-- **5-10배 성능 향상**: 10개 터널 기준 10초 → 1-2초
-
-## 🚧 Upcoming Features
-
-다음 기능들이 개발 예정입니다:
-
-### 🔐 Token Auto-Refresh
-- **현재 제한사항**: DevTunnel 로그인 토큰이 24시간 후 만료됨
-- **계획**: 자동 토큰 갱신 및 재로그인 알림 기능
-- **예상 효과**:
-  - 24시간 경과 시 자동 감지 및 알림
-  - 원클릭 재로그인 지원
-  - 백그라운드 토큰 갱신 (가능 시)
-
-### 🎨 UI/UX 개선
-- 다크 모드 지원
-- 터널 즐겨찾기 기능
-- 드래그 앤 드롭으로 터널 정렬
-
-### 📁 설정 관리
-- 설정 백업/복원
-- 프로필별 터널 그룹 관리
-- 자동 저장 기능
-
-### 📊 고급 모니터링
-- 트래픽 통계 및 차트
-- 연결 기록 및 분석
-- 알림 시스템 (터널 만료 임박 등)
-
-## 📋 Prerequisites
-
-### Required
-- **OS**: Linux (Ubuntu 20.04+, Debian 11+, Fedora 35+)
-- **DevTunnel CLI**: Microsoft DevTunnel CLI must be installed
-
-### Installing DevTunnel CLI
-
-#### Option 1: Download from Microsoft (Recommended)
-```bash
-# Download and install DevTunnel CLI
-# Visit: https://aka.ms/devtunnels/download
-
-# For Linux:
-curl -sL https://aka.ms/DevTunnelCliInstall | bash
-
-# Verify installation
-devtunnel --version
-```
-
-#### Option 2: Manual Installation
-1. Download from [Microsoft DevTunnel Downloads](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/get-started)
-2. Extract and place binary in your PATH
-3. Set executable permission: `chmod +x devtunnel`
-
-#### Set Custom Path (Optional)
-```bash
-# If DevTunnel is not in PATH, set environment variable
-export DEVTUNNEL_BIN="/path/to/devtunnel"
-
-# Make it permanent (~/.bashrc or ~/.zshrc)
-echo 'export DEVTUNNEL_BIN="/path/to/devtunnel"' >> ~/.bashrc
-```
-
-**Official Documentation**: [Microsoft DevTunnel Docs](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/)
+---
 
 ## 🚀 Installation
 
-### Option 1: AppImage (Recommended)
-
-**Download from [Releases](https://github.com/Bae-ChangHyun/devtunnel_gui/releases)**
+### 0. Prerequisites
+본 프로그램은 **Microsoft DevTunnel CLI**를 내부적으로 사용합니다.
+(앱 실행 시 감지되지 않으면 설정 가이드를 제공합니다.)
 
 ```bash
-# Make executable
-chmod +x DevTunnel-GUI_0.1.0_amd64.AppImage
+# Recommended: Install DevTunnel CLI (Linux)
+curl -sL [https://aka.ms/DevTunnelCliInstall](https://aka.ms/DevTunnelCliInstall) | bash
 
-# Run
+```
+
+### 1. Download & Run
+[Releases 페이지](https://github.com/Bae-ChangHyun/devtunnel_gui/releases)에서 최신 버전을 다운로드하세요.
+
+#### Option A: AppImage (권장)설치 없이 바로 실행 가능합니다.
+
+```bash
+chmod +x DevTunnel-GUI_0.1.0_amd64.AppImage
 ./DevTunnel-GUI_0.1.0_amd64.AppImage
 ```
 
-### Option 2: Debian Package
+#### Option B: Debian Package (.deb)Ubuntu/Debian 계열 사용자를 위한 설치 패키지입니다.
 
 ```bash
-# Download .deb from Releases
 sudo dpkg -i devtunnel-gui_0.1.0_amd64.deb
-
-# Run from application menu or
 devtunnel-gui
 ```
 
-### Option 3: Build from Source
+---
 
-#### Install Dependencies
-```bash
-# Ubuntu/Debian
-sudo apt update
-sudo apt install libwebkit2gtk-4.1-dev \
-  build-essential \
-  curl \
-  wget \
-  file \
-  libssl-dev \
-  libayatana-appindicator3-dev \
-  librsvg2-dev
+## 📖 Quick Start Guide
 
-# Fedora
-sudo dnf install webkit2gtk4.1-devel \
-  openssl-devel \
-  curl \
-  wget \
-  file \
-  libappindicator-gtk3-devel \
-  librsvg2-devel
+1. **로그인**: 앱 실행 후 `Microsoft` 또는 `GitHub` 계정으로 로그인합니다. (브라우저 인증)
+2. **터널 생성**: `Create Tunnel` 버튼을 누르고 ID와 태그를 입력합니다.
+3. **포트 추가**: 생성된 터널 카드에서 `Ports` 탭 → `Add Port`를 눌러 로컬 포트(예: 3000)를 연결합니다.
+4. **호스팅 시작**: `Host Tunnel` 버튼을 누르면 터널링이 시작됩니다.
+5. **접속**: 생성된 `Public URL`을 통해 외부에서 로컬 서버에 접속합니다.
 
-# Install Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+---
 
-# Install Node.js 18+
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-```
+## 💻 Tech Stack**Frontend**
 
-#### Build
-```bash
-# Clone repository
-git clone https://github.com/Bae-ChangHyun/devtunnel_gui.git
-cd devtunnel_gui
+**Backend & Desktop**
 
-# Install dependencies
-npm install
+---
 
-# Development mode
-npm run tauri dev
+## 🚧 Roadmap
+* [ ] **Token Auto-Refresh**: 24시간 토큰 만료 시 자동 갱신 및 알림
+* [ ] **UI/UX Polish**: 다크 모드, 드래그 앤 드롭 정렬
+* [ ] **Settings Sync**: 설정 백업 및 복원 기능
+* [ ] **Advanced Metrics**: 트래픽 통계 차트 시각화
 
-# Production build
-npm run tauri build
-
-# Output: src-tauri/target/release/bundle/
-```
-
-## 📖 Quick Start
-
-### 1. First Launch
-
-1. Launch the application
-2. Login screen: Choose **Microsoft** or **GitHub**
-3. Complete authentication in browser
-4. Return to app - automatically logged in
-
-### 2. Create Tunnel
-
-1. Click **"Create Tunnel"** in Dashboard
-2. Fill in details:
-   - **Tunnel ID** (optional): Custom identifier or auto-generate
-   - **Description**: Purpose of the tunnel
-   - **Tags**: Categorize (e.g., `web`, `api`, `production`)
-   - **Allow Anonymous**: Enable public access
-   - **Expiration**: 1h to 30d
-3. Click **"Create Tunnel"**
-
-### 3. Add Ports
-
-1. Click tunnel card → **"Ports"** tab
-2. Click **"Add Port"**
-3. Configure:
-   - **Port Number**: 1-65535
-   - **Protocol**: auto/http/https
-   - **Description**: Port purpose
-4. Copy generated public URL
-
-### 4. Host Tunnel
-
-1. Tunnel detail → **"Host Tunnel"**
-2. Enter port numbers (e.g., `3000,8080`)
-3. Set expiration (optional)
-4. Click **"Start Hosting"**
-5. Check **Logs** tab for status
-
-### 5. Access Control
-
-1. Select tunnel → **"Access Control"** tab
-2. Choose preset or custom:
-   - **Public Demo**: 24h anonymous access
-   - **Team Access**: Organization only
-   - **Client Preview**: Token-based
-3. Apply settings
-
-### 6. View Logs
-
-- Click **"Logs"** tab in header
-- Real-time logs with timestamps
-- Errors highlighted in red
-- **"Clear Logs"** to reset
-
-## 🔧 Configuration
-
-### Environment Variables
-
-```bash
-# Custom DevTunnel binary path
-export DEVTUNNEL_BIN="/usr/local/bin/devtunnel"
-
-# Persistent (add to ~/.bashrc)
-echo 'export DEVTUNNEL_BIN="/usr/local/bin/devtunnel"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-## 🐛 Troubleshooting
-
-### DevTunnel CLI Not Found
-
-```bash
-# Check if installed
-which devtunnel
-
-# Install if missing (see Prerequisites section)
-curl -sL https://aka.ms/DevTunnelCliInstall | bash
-
-# Or set custom path
-export DEVTUNNEL_BIN="/path/to/devtunnel"
-```
-
-### Login Failed
-
-```bash
-# Test CLI login manually
-devtunnel user login -g
-
-# Check authentication status
-devtunnel user show
-
-# Logout and retry
-devtunnel user logout
-```
-
-### Build Errors
-
-```bash
-# Clean and reinstall
-rm -rf node_modules src-tauri/target
-npm install
-
-# Update Rust
-rustup update
-
-# Rebuild
-npm run tauri build
-```
+---
 
 ## 📄 License & Disclaimer
-
 ### Project License
-This project's source code is distributed under the MIT License.
-
-### Microsoft DevTunnel Notice
-- Microsoft DevTunnel CLI is a product of Microsoft Corporation
-- This GUI tool is an unofficial client wrapping the DevTunnel CLI
-- Not endorsed or supported by Microsoft
-- DevTunnel usage is subject to Microsoft's terms of service
+Distributed under the **MIT License**. See `LICENSE` for more information.
 
 ### Disclaimer
-This software is provided "as is" without warranty of any kind, express or implied.
-All use is at your own risk.
-
-## 🤝 Contributing
-
-Bug reports, feature suggestions, and Pull Requests are welcome!
-
-## 📮 Contact
-
-Issues and questions: [GitHub Issues](https://github.com/Bae-ChangHyun/devtunnel_gui/issues)
+*  **Unofficial**: This is an unofficial wrapper and is not endorsed by Microsoft.
+* **Terms**: Use of DevTunnel CLI is subject to Microsoft's [Terms of Service](https://aka.ms/devtunnels/tos).
+* **Warranty**: This software is provided "as is" without warranty of any kind.
 
 ---
 
-**개발자를 위한, 개발자가 만든 DevTunnel GUI** 💻
+<div align="center">
 
-Made with ❤️ for developers who need dev tunnels with a GUI
+**Made with ❤️ for developers**
 
----
 
-## 💻 Tech Stack
 
-### Frontend
-![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Zustand](https://img.shields.io/badge/Zustand-5.0-FF6B00?style=for-the-badge&logo=react&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 
-### Backend
-![Rust](https://img.shields.io/badge/Rust-1.86-000000?style=for-the-badge&logo=rust&logoColor=white)
-![Tauri](https://img.shields.io/badge/Tauri-2.0-FFC131?style=for-the-badge&logo=tauri&logoColor=black)
-![Tokio](https://img.shields.io/badge/Tokio-Async-000000?style=for-the-badge&logo=rust&logoColor=white)
+이 프로젝트가 도움이 되었다면 ⭐️ Star를 눌러주세요!
 
-### Tools & Services
-![DevTunnel](https://img.shields.io/badge/DevTunnel-CLI-00A4EF?style=for-the-badge&logo=microsoft&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+[Issues](https://github.com/Bae-ChangHyun/devtunnel_gui/issues) • [Pull Requests](https://www.google.com/search?q=https://github.com/Bae-ChangHyun/devtunnel_gui/pulls)
+
+</div>
