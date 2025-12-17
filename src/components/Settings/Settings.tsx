@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getVersion } from '@tauri-apps/api/app';
 import { systemApi, type DevTunnelInfo } from '../../lib/api';
+import { toast } from '../../components/Toast';
 
 export default function Settings() {
   const [devTunnelInfo, setDevTunnelInfo] = useState<DevTunnelInfo | null>(null);
@@ -40,7 +41,7 @@ export default function Settings() {
       await systemApi.openUrl(url);
     } catch (error) {
       console.error('Failed to open URL:', error);
-      alert('Failed to open browser. Please visit: ' + url);
+      toast.error(`Failed to open browser. Please visit: ${url}`);
     }
   };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { accessApi } from '../../lib/api';
 import { ACCESS_PRESETS, type AccessPresetType } from '../../types/devtunnel';
+import { toast } from '../Toast';
 
 interface AccessControlManagerProps {
   tunnelId: string;
@@ -55,9 +56,9 @@ export default function AccessControlManager({ tunnelId }: AccessControlManagerP
       });
 
       loadAccessInfo();
-      alert('Access control applied successfully!');
+      toast.success('Access control applied successfully!');
     } catch (error) {
-      alert('Failed to apply access control: ' + error);
+      toast.error(`Failed to apply access control: ${error}`);
     }
   };
 
@@ -67,9 +68,9 @@ export default function AccessControlManager({ tunnelId }: AccessControlManagerP
     try {
       await accessApi.reset(tunnelId);
       loadAccessInfo();
-      alert('Access controls reset successfully!');
+      toast.success('Access controls reset successfully!');
     } catch (error) {
-      alert('Failed to reset access controls: ' + error);
+      toast.error(`Failed to reset access controls: ${error}`);
     }
   };
 

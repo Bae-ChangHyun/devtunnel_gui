@@ -2,6 +2,7 @@ import { useState, memo, useMemo, useCallback } from 'react';
 import type { TunnelListItem } from '../../types/devtunnel';
 import { useTunnelStore } from '../../stores/tunnelStore';
 import { tunnelApi } from '../../lib/api';
+import { toast } from '../Toast';
 
 interface TunnelCardProps {
   tunnel: TunnelListItem;
@@ -22,9 +23,10 @@ function TunnelCard({ tunnel, onRefresh }: TunnelCardProps) {
     setIsDeleting(true);
     try {
       await tunnelApi.delete(tunnel.tunnelId);
+      toast.success(`Tunnel "${tunnel.tunnelId}" deleted successfully`);
       onRefresh();
     } catch (error) {
-      alert('Failed to delete tunnel: ' + error);
+      toast.error(`Failed to delete tunnel: ${error}`);
     } finally {
       setIsDeleting(false);
     }

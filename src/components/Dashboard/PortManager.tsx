@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { portApi, tunnelApi } from '../../lib/api';
 import type { Port, Protocol } from '../../types/devtunnel';
+import { toast } from '../Toast';
 
 interface PortManagerProps {
   tunnelId: string;
@@ -127,8 +128,9 @@ export default function PortManager({ tunnelId, onPortsChanged }: PortManagerPro
 
       await loadPorts();
       if (onPortsChanged) onPortsChanged();
+      toast.success(`Port ${newPort} added successfully`);
     } catch (error) {
-      alert('Failed to add port: ' + error);
+      toast.error(`Failed to add port: ${error}`);
     } finally {
       setIsAdding(false);
     }
@@ -154,8 +156,9 @@ export default function PortManager({ tunnelId, onPortsChanged }: PortManagerPro
 
       await loadPorts();
       if (onPortsChanged) onPortsChanged();
+      toast.success(`Port ${portNumber} deleted successfully`);
     } catch (error) {
-      alert('Failed to delete port: ' + error);
+      toast.error(`Failed to delete port: ${error}`);
     }
   }
 
@@ -189,8 +192,9 @@ export default function PortManager({ tunnelId, onPortsChanged }: PortManagerPro
       }
 
       await loadPorts();
+      toast.success(`Port ${portNumber} updated successfully`);
     } catch (error) {
-      alert('Failed to update port: ' + error);
+      toast.error(`Failed to update port: ${error}`);
     }
   };
 
@@ -202,7 +206,7 @@ export default function PortManager({ tunnelId, onPortsChanged }: PortManagerPro
 
   const handlePing = async (port: Port) => {
     if (!port.portForwardingUris || port.portForwardingUris.length === 0) {
-      alert('No URL available to ping. Make sure the tunnel is hosting.');
+      toast.warning('No URL available to ping. Make sure the tunnel is hosting.');
       return;
     }
 

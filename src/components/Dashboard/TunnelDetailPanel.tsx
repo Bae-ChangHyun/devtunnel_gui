@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTunnelStore } from '../../stores/tunnelStore';
 import { tunnelApi } from '../../lib/api';
+import { toast } from '../Toast';
 import PortManager from './PortManager';
 import AccessControlManager from './AccessControlManager';
 
@@ -28,13 +29,7 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
   const [isRestarting, setIsRestarting] = useState(false);
   const [isRawDetailsOpen, setIsRawDetailsOpen] = useState(false);
 
-  useEffect(() => {
-    if (selectedTunnel) {
-      loadTunnelDetails();
-    }
-  }, [selectedTunnel]);
-
-  const loadTunnelDetails = async () => {
+  const loadTunnelDetails = useCallback(async () => {
     if (!selectedTunnel) return;
 
     setIsLoading(true);
@@ -70,11 +65,17 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedTunnel]);
+
+  useEffect(() => {
+    if (selectedTunnel) {
+      loadTunnelDetails();
+    }
+  }, [selectedTunnel, loadTunnelDetails]);
 
   const handleStartHost = async () => {
     if (!selectedTunnel || selectedTunnel.ports.length === 0) {
-      alert('Please add at least one port before hosting the tunnel');
+      toast.warning('Please add at least one port before hosting the tunnel');
       return;
     }
 
@@ -86,14 +87,14 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
         allowAnonymous: true,
       });
 
-      alert(`Tunnel ${selectedTunnel.tunnelId} is now hosting in the background!`);
+      toast.success(`Tunnel ${selectedTunnel.tunnelId} is now hosting in the background!`);
 
       // Refresh tunnel details to show URLs
       setTimeout(() => {
         loadTunnelDetails();
       }, 2000);
     } catch (error) {
-      alert('Failed to host tunnel: ' + error);
+      toast.error(`Failed to host tunnel: ${error}`);
     } finally {
       setIsHosting(false);
     }
@@ -114,14 +115,14 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
         allowAnonymous: true,
       });
 
-      alert('Tunnel restarted successfully!');
+      toast.success('Tunnel restarted successfully!');
 
       // Refresh tunnel details to show new start time
       setTimeout(() => {
         loadTunnelDetails();
       }, 2000);
     } catch (error) {
-      alert('Failed to restart tunnel: ' + error);
+      toast.error(`Failed to restart tunnel: ${error}`);
     } finally {
       setIsRestarting(false);
     }

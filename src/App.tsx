@@ -7,6 +7,7 @@ import Settings from './components/Settings/Settings';
 import LoginScreen from './components/Auth/LoginScreen';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
+import { ToastContainer } from './components/Toast';
 import './index.css';
 
 function App() {
@@ -65,6 +66,7 @@ function App() {
           </main>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

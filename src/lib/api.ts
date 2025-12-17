@@ -15,39 +15,44 @@ import type {
   PingResult,
 } from '../types/devtunnel';
 
+// API Error class for better error handling
+export class ApiError extends Error {
+  constructor(message: string, public command?: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+// Common wrapper for Tauri command invocations
+async function invokeCommand<T>(
+  command: string,
+  args?: Record<string, unknown>,
+  errorMessage?: string
+): Promise<T> {
+  const response = await invoke<CommandResponse<T>>(command, args);
+
+  if (!response.success || response.data === undefined || response.data === null) {
+    throw new ApiError(
+      response.error || errorMessage || `Command '${command}' failed`,
+      command
+    );
+  }
+
+  return response.data;
+}
+
 // Authentication API
 export const authApi = {
   login: async (provider: 'microsoft' | 'github', useDeviceCode = false): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('login_devtunnel', {
-      provider,
-      useDeviceCode,
-    });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Login failed');
-    }
-
-    return response.data;
+    return invokeCommand<string>('login_devtunnel', { provider, useDeviceCode }, 'Login failed');
   },
 
   logout: async (): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('logout_devtunnel');
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Logout failed');
-    }
-
-    return response.data;
+    return invokeCommand<string>('logout_devtunnel', undefined, 'Logout failed');
   },
 
   getUserInfo: async (): Promise<UserInfo> => {
-    const response = await invoke<CommandResponse<UserInfo>>('get_user_info');
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to get user info');
-    }
-
-    return response.data;
+    return invokeCommand<UserInfo>('get_user_info', undefined, 'Failed to get user info');
   },
 };
 
