@@ -6,9 +6,10 @@ import { toast } from '../Toast';
 interface PortManagerProps {
   tunnelId: string;
   onPortsChanged?: () => void;
+  tunnelDetails?: string; // Pre-loaded tunnel details to avoid redundant API calls
 }
 
-export default function PortManager({ tunnelId, onPortsChanged }: PortManagerProps) {
+export default function PortManager({ tunnelId, onPortsChanged, tunnelDetails: propTunnelDetails }: PortManagerProps) {
   const [ports, setPorts] = useState<Port[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -23,13 +24,13 @@ export default function PortManager({ tunnelId, onPortsChanged }: PortManagerPro
 
   useEffect(() => {
     loadPorts();
-  }, [tunnelId]);
+  }, [tunnelId, propTunnelDetails]);
 
   const loadPorts = async () => {
     setIsLoading(true);
     try {
-      // Get tunnel details to extract port information
-      const details = await tunnelApi.show(tunnelId);
+      // Use pre-loaded tunnel details if available, otherwise fetch
+      const details = propTunnelDetails || await tunnelApi.show(tunnelId);
 
       // Parse ports from the raw details output
       const portNumbers: number[] = [];

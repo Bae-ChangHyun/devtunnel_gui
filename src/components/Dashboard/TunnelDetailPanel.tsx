@@ -302,7 +302,11 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
           )}
 
           {activeTab === 'ports' && (
-            <PortManager tunnelId={selectedTunnel.tunnelId} onPortsChanged={loadTunnelDetails} />
+            <PortManager
+              tunnelId={selectedTunnel.tunnelId}
+              onPortsChanged={loadTunnelDetails}
+              tunnelDetails={tunnelDetails}
+            />
           )}
 
           {activeTab === 'access' && (
