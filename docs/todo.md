@@ -182,7 +182,145 @@ fn emit_log_with_level(app: &tauri::AppHandle, level: LogLevel, message: &str) {
   - [x] Release 패키지 생성 완료
 
 ## 완료 일자
-2025-12-17
+- 2025-12-17 (v0.1.0 - 성능 최적화 및 로그 개선)
+- 2025-12-17 (v0.2.0 - 보안 패치 및 품질 개선)
+
+---
+
+## v0.2.0 완료 요약
+
+### P0 보안 패치 (모두 완료)
+1. ✅ Command Injection 취약점 수정 - 입력 검증 추가
+2. ✅ 프로세스 리소스 누수 해결 - HashMap으로 프로세스 ID 관리
+3. ✅ 하드코딩된 경로 제거 - which 크레이트로 자동 탐색
+4. ✅ CSP 보안 정책 활성화 - Tauri 2.0 권장 정책 적용
+5. ✅ MIT LICENSE 파일 생성 - 법적 명확성 확보
+
+### P1 단기 개선 (부분 완료)
+6. ✅ JSON 파싱 지원 확인 - DevTunnel CLI `-j` 옵션 확인
+7. ✅ 미구현 함수 완성 - list_ports, list_clusters 구현
+8. ⏳ AppState Tauri State 전환 - 향후 과제
+9. ⏳ JSON 파싱 전면 전환 - 향후 과제 (대규모 리팩토링)
+
+### 커밋 내역
+- `fed554f` - fix(security): Command Injection 취약점 수정
+- `e86bc2b` - fix(resource): 프로세스 리소스 누수 해결
+- `e1868d3` - fix(config): 하드코딩된 경로 제거
+- `ae0a07e` - fix(security): CSP 보안 정책 활성화
+- `1979caa` - docs: MIT LICENSE 파일 추가
+- `769cb03` - feat(parser): 미구현 함수 완성
+
+---
+
+## 새로운 이슈 (코드 리뷰 결과)
+
+코드 리뷰를 통해 발견된 보안 취약점 및 품질 개선 사항
+
+### P0 - 즉시 수정 필요 (치명적)
+
+1. **Command Injection 취약점** (CRITICAL)
+   - 위치: `src-tauri/src/devtunnel.rs:681-740` (stop_tunnel)
+   - 문제: tunnel_id 입력 검증 없이 pkill 명령에 직접 사용
+   - 위험: 악의적 입력으로 임의 시스템 명령 실행 가능
+   - 해결: 정규식으로 입력 검증 추가
+
+2. **프로세스 리소스 누수** (CRITICAL)
+   - 위치: `src-tauri/src/devtunnel.rs:659`
+   - 문제: `std::mem::forget(child)`로 프로세스 좀비화
+   - 위험: 장시간 사용 시 시스템 리소스 고갈
+   - 해결: ProcessManager 구조체로 생명주기 관리
+
+3. **하드코딩된 개인 경로** (CRITICAL)
+   - 위치: `src-tauri/src/commands.rs` (모든 함수)
+   - 문제: `/home/bch/bin/devtunnel` 경로 하드코딩
+   - 위험: 다른 사용자 환경에서 즉시 실패, 배포 불가
+   - 해결: which 크레이트로 PATH에서 자동 탐색
+
+4. **CSP 비활성화** (SECURITY)
+   - 위치: `src-tauri/tauri.conf.json:25`
+   - 문제: `"csp": null`로 XSS 공격 방어 없음
+   - 위험: 악의적 스크립트 실행 가능
+   - 해결: 적절한 CSP 정책 설정
+
+5. **LICENSE 파일 누락**
+   - 위치: 프로젝트 루트
+   - 문제: README에는 MIT 라이센스 명시했으나 실제 파일 없음
+   - 위험: 법적 효력 불명확
+   - 해결: MIT LICENSE 파일 생성
+
+### P1 - 단기 개선
+
+1. **AppState 미사용**
+   - 문제: AppState 구조체 정의했으나 실제로 사용하지 않음
+   - 영향: 매번 새 DevTunnelClient 생성, active_hosts 추적 무의미
+   - 해결: Tauri State 관리 기능으로 싱글톤 패턴 적용
+
+2. **파싱 로직 취약성** ✅ 확인 완료
+   - 문제: CLI 텍스트 출력을 정규식/문자열로 파싱
+   - 위험: DevTunnel CLI 업데이트 시 파싱 실패
+   - 해결: `--output json` 옵션 활용 (DevTunnel CLI에서 `-j, --json` 옵션 지원 확인됨)
+   - 참고: 대규모 리팩토링 필요, 추후 별도 작업으로 진행
+
+3. **미구현 함수**
+   - 위치: `list_ports()`, `list_clusters()`
+   - 문제: 항상 빈 Vec 반환, 실제 파싱 로직 없음
+   - 해결: 실제 파싱 구현
+
+## 작업 계획
+
+### Phase 1: P0 보안 패치 (우선순위: 최고)
+
+- [ ] 1. Command Injection 방지
+  - [ ] tunnel_id 입력 검증 정규식 추가
+  - [ ] stop_tunnel 함수 보안 강화
+
+- [ ] 2. 프로세스 리소스 관리
+  - [ ] ProcessManager 구조체 설계
+  - [ ] 프로세스 생명주기 관리 구현
+  - [ ] std::mem::forget 제거
+
+- [ ] 3. 경로 하드코딩 제거
+  - [ ] which 크레이트 추가
+  - [ ] get_devtunnel_path() 유틸 함수 구현
+  - [ ] 모든 commands.rs 함수에 적용
+
+- [ ] 4. CSP 활성화
+  - [ ] tauri.conf.json에 CSP 정책 추가
+  - [ ] 필요한 리소스만 허용하도록 설정
+
+- [ ] 5. LICENSE 파일 생성
+  - [ ] MIT LICENSE 템플릿 생성
+  - [ ] 저작권 정보 추가
+
+### Phase 2: P1 아키텍처 개선 (우선순위: 중)
+
+- [ ] 6. AppState 활용
+  - [ ] Tauri State로 DevTunnelClient 관리
+  - [ ] 싱글톤 패턴 적용
+
+- [ ] 7. JSON 파싱 전환
+  - [ ] DevTunnel CLI의 --output json 옵션 확인
+  - [ ] 파싱 로직을 JSON 기반으로 리팩토링
+
+- [ ] 8. 미구현 함수 완성
+  - [ ] list_ports() 실제 구현
+  - [ ] list_clusters() 실제 구현
+
+## 진행 상황
+
+- [x] Phase 1 완료 (2025-12-17)
+  - [x] Command Injection 방지
+  - [x] 프로세스 리소스 누수 해결
+  - [x] 하드코딩된 경로 제거
+  - [x] CSP 활성화
+  - [x] LICENSE 파일 생성
+- [x] Phase 2 부분 완료 (2025-12-17)
+  - [x] JSON 파싱 지원 확인
+  - [x] 미구현 함수 완성 (list_ports, list_clusters)
+  - [ ] AppState를 Tauri State로 전환 (향후 과제)
+  - [ ] JSON 파싱 전면 전환 (향후 과제)
+- [x] 빌드 성공
+- [x] 문서 업데이트
 
 ## 메모
 
