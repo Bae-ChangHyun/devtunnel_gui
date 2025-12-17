@@ -4,6 +4,15 @@ import { tunnelApi } from '../../lib/api';
 import PortManager from './PortManager';
 import AccessControlManager from './AccessControlManager';
 
+// Chevron Down Icon Component
+function ChevronDownIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  );
+}
+
 interface TunnelDetailPanelProps {
   onRefresh: () => void;
 }
@@ -17,6 +26,7 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
   const [isAlreadyHosted, setIsAlreadyHosted] = useState(false);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [isRestarting, setIsRestarting] = useState(false);
+  const [isRawDetailsOpen, setIsRawDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (selectedTunnel) {
@@ -120,26 +130,31 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
   if (!selectedTunnel) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="card max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="card max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col bg-dark-800">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
-          <div>
-            <h2 className="text-2xl font-bold text-white">{selectedTunnel.tunnelId}</h2>
-            {selectedTunnel.description && (
-              <p className="text-gray-400 mt-1">{selectedTunnel.description}</p>
+          <div className="flex items-center gap-3">
+            {isAlreadyHosted && (
+              <div className="status-dot status-dot-active" />
             )}
+            <div>
+              <h2 className="text-xl font-semibold text-white tracking-tight">{selectedTunnel.tunnelId}</h2>
+              {selectedTunnel.description && (
+                <p className="text-zinc-500 text-sm mt-0.5">{selectedTunnel.description}</p>
+              )}
+            </div>
           </div>
           <button
             onClick={() => selectTunnel(null)}
-            className="text-gray-400 hover:text-white text-2xl"
+            className="text-zinc-400 hover:text-white text-2xl leading-none"
           >
             ×
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-gray-700 flex-shrink-0">
+        <div className="flex gap-1 mb-6 border-b border-zinc-800 flex-shrink-0">
           {[
             { id: 'info', label: 'Information' },
             { id: 'ports', label: 'Ports' },
@@ -148,13 +163,16 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-4 py-2.5 font-medium text-sm transition-all relative ${
                 activeTab === tab.id
-                  ? 'text-primary-400 border-b-2 border-primary-400'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'text-white'
+                  : 'text-zinc-500 hover:text-white'
               }`}
             >
               {tab.label}
+              {activeTab === tab.id && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500" />
+              )}
             </button>
           ))}
         </div>
@@ -162,69 +180,58 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           {activeTab === 'info' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Host Status / Button */}
-              {isAlreadyHosted ? (
-                <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 bg-green-500/20 rounded-full">
-                        <span className="text-2xl">✓</span>
-                      </div>
-                      <div>
-                        <h3 className="text-green-400 font-semibold mb-1">Tunnel is Currently Hosting</h3>
-                        <p className="text-sm text-gray-400">
-                          This tunnel is active and hosting connections. URLs are available below.
-                        </p>
-                        {startTime && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Started: {startTime}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleForceRestart}
-                      disabled={isRestarting}
-                      className="btn-secondary px-4 py-2 text-sm"
-                    >
-                      {isRestarting ? 'Restarting...' : 'Force Restart'}
-                    </button>
+              <div className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-sm font-medium text-white">Host Status</h3>
+                    {isAlreadyHosted && (
+                      <span className="text-xs text-emerald-400">Active</span>
+                    )}
                   </div>
-                </div>
-              ) : (
-                <div className="bg-primary-900/20 border border-primary-500/50 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-white font-semibold mb-1">Tunnel Hosting</h3>
-                      <p className="text-sm text-gray-400">
-                        Start hosting this tunnel to activate ports and generate URLs
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleStartHost}
-                      disabled={isHosting || selectedTunnel.ports.length === 0}
-                      className="btn-primary px-6"
-                    >
-                      {isHosting ? 'Starting...' : 'Start Hosting'}
-                    </button>
-                  </div>
-                  {selectedTunnel.ports.length === 0 && (
-                    <p className="text-xs text-yellow-400 mt-2">
-                      ⚠️ Add at least one port in the Ports tab before hosting
+                  {isAlreadyHosted ? (
+                    <p className="text-xs text-zinc-400">
+                      {startTime ? `Started: ${startTime}` : 'Tunnel is hosting connections'}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-zinc-400">
+                      {selectedTunnel.ports.length === 0
+                        ? 'Add ports before hosting'
+                        : 'Ready to host'}
                     </p>
                   )}
                 </div>
-              )}
+                <div className="flex gap-2">
+                  {isAlreadyHosted ? (
+                    <button
+                      onClick={handleForceRestart}
+                      disabled={isRestarting}
+                      className="btn-secondary text-xs"
+                    >
+                      {isRestarting ? 'Restarting...' : 'Restart'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleStartHost}
+                      disabled={isHosting || selectedTunnel.ports.length === 0}
+                      className="btn-primary text-xs"
+                    >
+                      {isHosting ? 'Starting...' : 'Start Host'}
+                    </button>
+                  )}
+                </div>
+              </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* Information Grid */}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 <div>
-                  <label className="text-sm text-gray-400">Tunnel ID</label>
-                  <p className="text-white font-mono">{selectedTunnel.tunnelId}</p>
+                  <label className="text-xs text-zinc-500 uppercase tracking-wider">Tunnel ID</label>
+                  <p className="text-sm text-white font-mono mt-1">{selectedTunnel.tunnelId}</p>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400">Status</label>
-                  <p className="text-white">
+                  <label className="text-xs text-zinc-500 uppercase tracking-wider">Status</label>
+                  <p className="mt-1">
                     <span className={`badge ${
                       selectedTunnel.status === 'active' ? 'badge-success' :
                       selectedTunnel.status === 'expired' ? 'badge-danger' :
@@ -236,21 +243,24 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
                 </div>
                 {selectedTunnel.expiresAt && (
                   <div>
-                    <label className="text-sm text-gray-400">Expires At</label>
-                    <p className="text-white">
+                    <label className="text-xs text-zinc-500 uppercase tracking-wider">Expires At</label>
+                    <p className="text-sm text-white mt-1">
                       {new Date(selectedTunnel.expiresAt).toLocaleString()}
                     </p>
                   </div>
                 )}
                 <div>
-                  <label className="text-sm text-gray-400">Ports</label>
-                  <p className="text-white">{selectedTunnel.ports.join(', ')}</p>
+                  <label className="text-xs text-zinc-500 uppercase tracking-wider">Ports</label>
+                  <p className="text-sm text-white mt-1 font-mono">
+                    {selectedTunnel.ports.length > 0 ? selectedTunnel.ports.join(', ') : 'None'}
+                  </p>
                 </div>
               </div>
 
+              {/* Tags */}
               {selectedTunnel.tags && selectedTunnel.tags.length > 0 && (
                 <div>
-                  <label className="text-sm text-gray-400 block mb-2">Tags</label>
+                  <label className="text-xs text-zinc-500 uppercase tracking-wider block mb-2">Tags</label>
                   <div className="flex gap-2 flex-wrap">
                     {selectedTunnel.tags.map((tag) => (
                       <span key={tag} className="badge badge-info">{tag}</span>
@@ -259,12 +269,29 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
                 </div>
               )}
 
+              {/* Raw Details Accordion */}
               {tunnelDetails && (
-                <div>
-                  <label className="text-sm text-gray-400 block mb-2">Raw Details</label>
-                  <pre className="bg-gray-800 p-4 rounded-lg text-sm text-gray-300 overflow-x-auto">
-                    {tunnelDetails}
-                  </pre>
+                <div className="border border-zinc-800 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setIsRawDetailsOpen(!isRawDetailsOpen)}
+                    className="w-full flex items-center justify-between p-4 bg-dark-700 hover:bg-dark-600 transition-colors"
+                  >
+                    <span className="text-xs text-zinc-400 uppercase tracking-wider font-medium">
+                      Advanced Details
+                    </span>
+                    <ChevronDownIcon
+                      className={`w-4 h-4 text-zinc-400 transition-transform ${
+                        isRawDetailsOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                  {isRawDetailsOpen && (
+                    <div className="p-4 bg-dark-900">
+                      <pre className="text-xs text-zinc-400 overflow-x-auto font-mono leading-relaxed">
+                        {tunnelDetails}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

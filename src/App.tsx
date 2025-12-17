@@ -55,12 +55,12 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-dark-900 text-white">
       <div className="flex">
         <Sidebar />
         <div className="flex-1">
           <Header />
-          <main>
+          <main className="bg-dark-900">
             {renderContent()}
           </main>
         </div>

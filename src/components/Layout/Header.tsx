@@ -14,26 +14,21 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">DevTunnel Manager</h1>
-          <p className="text-sm text-gray-400">Manage your development tunnels</p>
-        </div>
-
+    <header className="bg-dark-800/50 border-b border-zinc-800/50 px-8 py-4">
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-4">
           {userInfo && (
             <div className="text-right">
               <p className="text-sm font-medium text-white">
                 {userInfo.userName || userInfo.email || 'User'}
               </p>
-              <p className="text-xs text-gray-400">{userInfo.provider}</p>
+              <p className="text-xs text-zinc-500">{userInfo.provider}</p>
             </div>
           )}
 
           <button
             onClick={handleLogout}
-            className="btn-secondary text-sm"
+            className="btn-secondary text-xs"
           >
             Logout
           </button>
