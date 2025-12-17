@@ -679,6 +679,13 @@ impl DevTunnelClient {
 
     // Stop hosting tunnel by killing the devtunnel host process
     pub fn stop_tunnel(&self, tunnel_id: String) -> Result<String> {
+        // Validate tunnel_id to prevent command injection
+        // Tunnel IDs should only contain alphanumeric characters, dots, hyphens, and underscores
+        let valid_id = regex::Regex::new(r"^[a-zA-Z0-9.\-_]+$").unwrap();
+        if !valid_id.is_match(&tunnel_id) {
+            return Err(anyhow::anyhow!("Invalid tunnel ID format: contains potentially dangerous characters"));
+        }
+
         #[cfg(target_os = "linux")]
         {
             let output = Command::new("pkill")
