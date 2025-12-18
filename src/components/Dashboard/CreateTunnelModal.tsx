@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { tunnelApi } from '../../lib/api';
 import type { CreateTunnelRequest } from '../../types/devtunnel';
 
@@ -16,6 +16,17 @@ export default function CreateTunnelModal({ onClose, onSuccess }: CreateTunnelMo
   const [expiration, setExpiration] = useState('30d');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoading) {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose, isLoading]);
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -52,12 +63,25 @@ export default function CreateTunnelModal({ onClose, onSuccess }: CreateTunnelMo
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isLoading) {
+          onClose();
+        }
+      }}
+    >
+      <div
+        className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-tunnel-title"
+      >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">Create New Tunnel</h2>
+          <h2 id="create-tunnel-title" className="text-2xl font-bold text-white">Create New Tunnel</h2>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="text-gray-400 hover:text-white text-2xl"
           >
             ×
@@ -73,10 +97,11 @@ export default function CreateTunnelModal({ onClose, onSuccess }: CreateTunnelMo
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Tunnel ID */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="tunnel-id" className="block text-sm font-medium text-gray-300 mb-2">
               Tunnel ID (optional)
             </label>
             <input
+              id="tunnel-id"
               type="text"
               value={tunnelId}
               onChange={(e) => setTunnelId(e.target.value)}
@@ -90,10 +115,11 @@ export default function CreateTunnelModal({ onClose, onSuccess }: CreateTunnelMo
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
               Description
             </label>
             <textarea
+              id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe this tunnel..."
@@ -104,11 +130,12 @@ export default function CreateTunnelModal({ onClose, onSuccess }: CreateTunnelMo
 
           {/* Tags */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="tag-input" className="block text-sm font-medium text-gray-300 mb-2">
               Tags
             </label>
             <div className="flex gap-2 mb-2">
               <input
+                id="tag-input"
                 type="text"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
@@ -124,6 +151,7 @@ export default function CreateTunnelModal({ onClose, onSuccess }: CreateTunnelMo
               <button
                 type="button"
                 onClick={handleAddTag}
+                aria-label="Add tag"
                 className="btn-secondary"
               >
                 Add
@@ -140,6 +168,7 @@ export default function CreateTunnelModal({ onClose, onSuccess }: CreateTunnelMo
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
+                      aria-label={`Remove tag ${tag}`}
                       className="ml-1 hover:text-red-300"
                     >
                       ×
@@ -166,10 +195,11 @@ export default function CreateTunnelModal({ onClose, onSuccess }: CreateTunnelMo
 
           {/* Expiration */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="expiration" className="block text-sm font-medium text-gray-300 mb-2">
               Expiration
             </label>
             <select
+              id="expiration"
               value={expiration}
               onChange={(e) => setExpiration(e.target.value)}
               className="input-field w-full"

@@ -2,334 +2,243 @@
 
 ## 현재 이슈
 
-DevTunnel GUI가 리눅스 환경에서 다음과 같은 문제를 겪고 있음:
-1. **성능 문제**: 대부분의 기능은 작동하지만 너무 느림
-2. **로그 문제**: 로그가 실제로 반영되지 않음
+**코드 리뷰를 통한 종합적 품질 개선**
 
-## 문제 원인 분석
+4개 관점(보안, UI/UX, 아키텍처, 기능)에서 병렬 코드 리뷰를 수행한 결과, 다음과 같은 개선이 필요합니다:
 
-### 1. 성능 병목 (N+1 Query Problem)
+- **P0 (Critical)**: 보안 취약점 2건, 접근성 미준수
+- **P1 (High)**: 아키텍처 문제 5건
+- **P2 (Medium)**: UI/UX 개선 3건
 
-**위치**: `src-tauri/src/devtunnel.rs:168-173`
+## Plan
 
-```rust
-// For each tunnel, fetch detailed info to get actual ports
-for tunnel in &mut tunnels {
-    if let Ok(show_output) = self.show_tunnel(Some(tunnel.tunnel_id.clone())) {
-        let ports = parser::parse_tunnel_show(&show_output);
-        tunnel.ports = ports;
-    }
-}
-```
+### Phase 1: P0 - 보안 및 접근성 (Critical) [예상: 9-13시간]
 
-**문제점**:
-- `list_tunnels()` 호출 시 각 터널마다 개별 `show_tunnel()` 실행
-- 터널 5개 → 총 6번의 CLI 프로세스 spawn (1번 list + 5번 show)
-- 각 프로세스 생성 오버헤드로 인해 기하급수적으로 느려짐
-- 예: 10개 터널 = 11번, 20개 터널 = 21번의 CLI 호출
+#### 1. URL 검증 추가 (2-3시간)
+**목표**: SSRF 및 Command Injection 방지
 
-**성능 영향**:
-- 터널 목록 로드 시간이 터널 개수에 비례하여 증가
-- 대시보드 접근 시 매번 느린 로딩 발생
-- UI 반응성 저하
+**작업 내역**:
+- [ ] `src-tauri/src/commands.rs:573-589` - `open_url` 함수 수정
+  - HTTP/HTTPS 스키마만 허용
+  - `url` 크레이트로 파싱 검증
+- [ ] `src-tauri/src/devtunnel.rs:881-922` - `ping_port` 함수 수정
+  - URL 스키마 검증
+  - curl 옵션 인젝션 방지 (`-` 문자 검증)
+- [ ] 입력 검증 실패 시 명확한 에러 메시지 반환
 
-### 2. 로그 미반영 문제
+#### 2. 접근성(A11y) 개선 (4-6시간)
+**목표**: WCAG 2.1 AA 기준 준수
 
-**위치**: `src-tauri/src/commands.rs`
+**작업 내역**:
+- [ ] 클릭 가능한 `<div>` 요소에 키보드 접근성 추가
+  - `role="button"`, `tabIndex={0}`, `onKeyDown` 핸들러
+  - 대상: TunnelCard, 탭 버튼, 액션 버튼
+- [ ] 모든 아이콘 버튼에 `aria-label` 추가
+  - 새로고침, 삭제, 편집, 닫기 버튼
+- [ ] 모달 접근성 개선
+  - 포커스 트랩 구현 (`react-focus-lock` 또는 수동 구현)
+  - ESC 키로 모달 닫기
+  - `role="dialog"`, `aria-modal="true"`
+- [ ] 폼 접근성 개선
+  - `<label htmlFor>` 연결
+  - 에러 메시지 `aria-describedby` 연결
 
-**로그가 있는 커맨드** (7개):
-- ✅ create_tunnel (73, 83, 87)
-- ✅ host_tunnel (156, 164, 168)
-- ✅ stop_tunnel (176, 184, 188)
-- ✅ restart_tunnel (197, 205, 209)
-- ✅ create_port (243, 251, 255)
-- ✅ update_port (287, 294, 298)
-- ✅ delete_port (306, 314, 318)
+#### 3. 에러 복구 메커니즘 (3-4시간)
+**목표**: 네트워크 오류 시 사용자 경험 개선
 
-**로그가 없는 주요 커맨드** (15개 이상):
-- ❌ login_devtunnel (32) - 인증 관련
-- ❌ logout_devtunnel (47) - 인증 관련
-- ❌ get_user_info (59) - 인증 관련
-- ❌ **list_tunnels (94)** ← 가장 자주 호출됨!
-- ❌ show_tunnel (106)
-- ❌ update_tunnel (118)
-- ❌ delete_tunnel (130)
-- ❌ get_clusters (142)
-- ❌ show_port (228)
-- ❌ ping_port (262)
-- ❌ 기타 access control 관련 커맨드들...
-
-**문제점**:
-- 25개 커맨드 중 약 7개만 로그를 emit
-- 가장 빈번한 작업인 `list_tunnels`가 로그를 발생시키지 않음
-- 사용자가 실제로 어떤 작업이 진행 중인지 알 수 없음
-
-## 개선 방안
-
-### Plan 1: 성능 최적화 (N+1 Query 해결)
-
-**옵션 A: 병렬 처리**
-```rust
-// tokio를 사용한 병렬 show_tunnel 호출
-use tokio::task::JoinSet;
-
-let mut set = JoinSet::new();
-for tunnel_id in tunnel_ids {
-    let client = self.clone();
-    set.spawn(async move {
-        client.show_tunnel(Some(tunnel_id))
-    });
-}
-
-while let Some(result) = set.join_next().await {
-    // process result
-}
-```
-- 장점: 구현이 간단, 즉각적인 성능 개선 (병렬 실행)
-- 단점: 여전히 N번의 CLI 호출, CLI 병렬 실행 제한 가능성
-
-**옵션 B: 캐싱 레이어 추가**
-```rust
-struct CachedTunnelData {
-    data: TunnelListItem,
-    timestamp: Instant,
-}
-
-struct DevTunnelClient {
-    cache: Arc<Mutex<HashMap<String, CachedTunnelData>>>,
-    cache_ttl: Duration, // 예: 30초
-}
-```
-- 장점: 중복 호출 제거, 전반적인 성능 개선
-- 단점: 캐시 무효화 로직 필요, 복잡도 증가
-
-**옵션 C: 경량 목록 + 필요시 상세 조회**
-```rust
-// list_tunnels()는 기본 정보만 반환
-// 사용자가 터널 선택 시에만 show_tunnel() 호출
-pub fn list_tunnels_light(&self) -> Result<Vec<TunnelBasicInfo>> {
-    // ports 정보 없이 빠르게 반환
-}
-```
-- 장점: 초기 로딩 매우 빠름, 필요한 데이터만 로드
-- 단점: Frontend 로직 수정 필요, 지연 로딩
-
-**권장**: 옵션 A (병렬 처리) + 옵션 C (경량 목록)의 조합
-- 1단계: 경량 목록으로 즉시 표시
-- 2단계: 백그라운드에서 병렬로 상세 정보 로드
-
-### Plan 2: 로그 시스템 개선
-
-**방법 A: 모든 커맨드에 로그 추가**
-```rust
-#[tauri::command]
-pub fn list_tunnels(app: tauri::AppHandle, req: Option<ListTunnelsRequest>) -> CommandResponse<Vec<TunnelListItem>> {
-    emit_log(&app, "Loading tunnel list...");
-
-    let binary_path = std::env::var("DEVTUNNEL_BIN")
-        .unwrap_or_else(|_| "/home/bch/bin/devtunnel".to_string());
-    let client = DevTunnelClient::new(binary_path);
-
-    match client.list_tunnels(req) {
-        Ok(tunnels) => {
-            emit_log(&app, &format!("Loaded {} tunnels", tunnels.len()));
-            CommandResponse::success(tunnels)
-        },
-        Err(e) => {
-            emit_log(&app, &format!("ERROR: Failed to list tunnels: {}", e));
-            CommandResponse::error(e.to_string())
-        }
-    }
-}
-```
-
-**적용 대상**:
-1. 인증 커맨드 (login, logout, get_user_info)
-2. 터널 관리 (list, show, update, delete)
-3. 클러스터 (get_clusters)
-4. 포트 조회 (show_port, ping_port)
-5. 액세스 컨트롤 관련 커맨드
-
-**방법 B: 로그 레벨 구분**
-```rust
-enum LogLevel {
-    DEBUG,   // 상세한 디버그 정보
-    INFO,    // 일반 정보
-    WARN,    // 경고
-    ERROR,   // 에러
-}
-
-fn emit_log_with_level(app: &tauri::AppHandle, level: LogLevel, message: &str) {
-    let log_message = format!("[{}] {}", level, message);
-    let _ = app.emit("devtunnel-log", log_message);
-}
-```
-
-## 진행 상황
-
-- [x] 프로젝트 구조 파악
-- [x] 성능 병목 지점 분석
-- [x] 로그 미반영 문제 원인 파악
-- [x] 개선 방안 구현
-  - [x] 성능 최적화 (N+1 Query 해결)
-    - [x] 경량 목록 함수 추가 (list_tunnels_light)
-    - [x] 병렬 처리 함수 추가 (enrich_tunnel_details)
-  - [x] 로그 시스템 개선
-    - [x] 모든 커맨드에 로그 추가 (18개 커맨드)
-- [x] 빌드 성공
-  - [x] Rust 컴파일 성공
-  - [x] Frontend 빌드 성공
-  - [x] Release 패키지 생성 완료
-
-## 완료 일자
-- 2025-12-17 (v0.1.0 - 성능 최적화 및 로그 개선)
-- 2025-12-17 (v0.2.0 - 보안 패치 및 품질 개선)
+**작업 내역**:
+- [ ] `src/lib/api.ts` - 재시도 로직 추가
+  - `invokeCommandWithRetry` 함수 구현
+  - 최대 3회 재시도, 지수 백오프
+- [ ] 컴포넌트 레벨 에러 처리
+  - 재시도 버튼 UI 추가
+  - 에러 상태 명확한 표시
+- [ ] 토큰/세션 만료 감지
+  - 401 에러 시 자동 로그아웃 또는 재인증 요청
 
 ---
 
-## v0.2.0 완료 요약
+### Phase 2: P1 - 아키텍처 개선 (High) [예상: 12-18시간]
 
-### P0 보안 패치 (모두 완료)
-1. ✅ Command Injection 취약점 수정 - 입력 검증 추가
-2. ✅ 프로세스 리소스 누수 해결 - HashMap으로 프로세스 ID 관리
-3. ✅ 하드코딩된 경로 제거 - which 크레이트로 자동 탐색
-4. ✅ CSP 보안 정책 활성화 - Tauri 2.0 권장 정책 적용
-5. ✅ MIT LICENSE 파일 생성 - 법적 명확성 확보
+#### 4. AppState Singleton 구현 (2-3시간)
+**목표**: 프로세스 추적 기능 복원, 메모리 효율성
 
-### P1 단기 개선 (부분 완료)
-6. ✅ JSON 파싱 지원 확인 - DevTunnel CLI `-j` 옵션 확인
-7. ✅ 미구현 함수 완성 - list_ports, list_clusters 구현
-8. ⏳ AppState Tauri State 전환 - 향후 과제
-9. ⏳ JSON 파싱 전면 전환 - 향후 과제 (대규모 리팩토링)
+**작업 내역**:
+- [ ] `src-tauri/src/lib.rs` - Tauri State 설정
+  - `app.manage(AppState::new())`
+- [ ] `src-tauri/src/commands.rs` - 모든 커맨드 수정
+  - `state: tauri::State<AppState>` 파라미터 추가
+  - 매번 `DevTunnelClient::new()` 호출 제거
+- [ ] `active_processes` HashMap 기능 복원
+  - 터널 호스팅 프로세스 추적
 
-### 커밋 내역
-- `fed554f` - fix(security): Command Injection 취약점 수정
-- `e86bc2b` - fix(resource): 프로세스 리소스 누수 해결
-- `e1868d3` - fix(config): 하드코딩된 경로 제거
-- `ae0a07e` - fix(security): CSP 보안 정책 활성화
-- `1979caa` - docs: MIT LICENSE 파일 추가
-- `769cb03` - feat(parser): 미구현 함수 완성
+#### 5. API 에러 처리 통합 (1-2시간)
+**목표**: 중복 코드 제거, 일관성 확보
+
+**작업 내역**:
+- [ ] `src/lib/api.ts` - `invokeCommand` 헬퍼 사용
+  - 모든 API 메서드를 `invokeCommand` 기반으로 리팩토링
+  - 250+ 줄의 중복 에러 처리 코드 제거
+- [ ] `ApiError` 타입 일관성
+  - `Error` 대신 `ApiError` 사용
+
+#### 6. Store 분리 (3-4시간)
+**목표**: 단일 책임 원칙, 유지보수성 향상
+
+**작업 내역**:
+- [ ] `src/stores/authStore.ts` 생성
+  - `userInfo`, `isAuthenticated` 이동
+  - 로그인/로그아웃 액션
+- [ ] `src/stores/uiStore.ts` 생성
+  - `activeTab`, `selectedTunnel` 이동
+  - UI 상태 관리
+- [ ] `src/stores/tunnelStore.ts` 리팩토링
+  - 터널 데이터만 관리
+  - 캐싱 로직 유지
+- [ ] 컴포넌트에서 분리된 스토어 사용
+
+#### 7. 사용자 설정 저장 (2-3시간)
+**목표**: 사용자 맞춤 설정 지속성
+
+**작업 내역**:
+- [ ] 설정 타입 정의
+  ```typescript
+  interface UserSettings {
+    defaultProtocol: Protocol;
+    cacheTTL: number;
+    theme: 'dark' | 'light';
+    autoRefreshInterval: number;
+  }
+  ```
+- [ ] `@tauri-apps/api/fs`로 설정 파일 저장/로드
+  - `~/.config/devtunnel-gui/settings.json`
+- [ ] Settings 페이지에서 설정 편집 UI
+
+#### 8. 앱 업데이트 메커니즘 (4-6시간)
+**목표**: 자동 업데이트 확인 및 설치
+
+**작업 내역**:
+- [ ] `src-tauri/tauri.conf.json` - updater 플러그인 설정
+  - GitHub Releases 엔드포인트 설정
+  - 공개키 생성 및 등록
+- [ ] 업데이트 확인 UI
+  - Settings 페이지에 "업데이트 확인" 버튼
+  - 새 버전 알림 다이얼로그
+- [ ] 자동 업데이트 옵션
+  - 앱 시작 시 자동 확인 (선택적)
 
 ---
 
-## 새로운 이슈 (코드 리뷰 결과)
+### Phase 3: P2 - UI 개선 (Medium) [예상: 9-13시간]
 
-코드 리뷰를 통해 발견된 보안 취약점 및 품질 개선 사항
+#### 9. 공통 UI 컴포넌트 라이브러리 (6-8시간)
+**목표**: 코드 중복 제거, 디자인 일관성
 
-### P0 - 즉시 수정 필요 (치명적)
+**작업 내역**:
+- [ ] `src/components/ui/` 디렉토리 생성
+- [ ] `Button.tsx` - 재사용 가능한 버튼 컴포넌트
+  - variant: primary, secondary, danger, ghost
+  - size: sm, md, lg
+  - 접근성 내장
+- [ ] `Input.tsx` - 폼 입력 컴포넌트
+  - 레이블, 에러 메시지 통합
+  - 접근성 지원
+- [ ] `Modal.tsx` - 모달 컴포넌트
+  - 포커스 트랩, ESC 키 핸들링 내장
+- [ ] `Spinner.tsx` - 로딩 스피너
+  - 일관된 로딩 표시
+- [ ] 디자인 토큰 통합
+  - `src/lib/designTokens.ts` 생성
+  - 색상, 간격, 타이포그래피 상수화
+- [ ] 기존 컴포넌트를 공통 컴포넌트로 마이그레이션
 
-1. **Command Injection 취약점** (CRITICAL)
-   - 위치: `src-tauri/src/devtunnel.rs:681-740` (stop_tunnel)
-   - 문제: tunnel_id 입력 검증 없이 pkill 명령에 직접 사용
-   - 위험: 악의적 입력으로 임의 시스템 명령 실행 가능
-   - 해결: 정규식으로 입력 검증 추가
+#### 10. CSP 정책 개선 (1-2시간)
+**목표**: XSS 방어 강화
 
-2. **프로세스 리소스 누수** (CRITICAL)
-   - 위치: `src-tauri/src/devtunnel.rs:659`
-   - 문제: `std::mem::forget(child)`로 프로세스 좀비화
-   - 위험: 장시간 사용 시 시스템 리소스 고갈
-   - 해결: ProcessManager 구조체로 생명주기 관리
+**작업 내역**:
+- [ ] `tauri.conf.json` - CSP 정책 수정
+  - `'unsafe-inline'` 제거 검토
+  - Nonce 기반 스타일링 또는 별도 CSS 파일
+- [ ] 인라인 스타일 제거
+  - Tailwind 클래스로 전환
 
-3. **하드코딩된 개인 경로** (CRITICAL)
-   - 위치: `src-tauri/src/commands.rs` (모든 함수)
-   - 문제: `/home/bch/bin/devtunnel` 경로 하드코딩
-   - 위험: 다른 사용자 환경에서 즉시 실패, 배포 불가
-   - 해결: which 크레이트로 PATH에서 자동 탐색
+#### 11. 로그 필터링/검색 (2-3시간)
+**목표**: 로그 사용성 개선
 
-4. **CSP 비활성화** (SECURITY)
-   - 위치: `src-tauri/tauri.conf.json:25`
-   - 문제: `"csp": null`로 XSS 공격 방어 없음
-   - 위험: 악의적 스크립트 실행 가능
-   - 해결: 적절한 CSP 정책 설정
+**작업 내역**:
+- [ ] `LogsViewer.tsx` - 필터링 UI 추가
+  - 레벨 필터: All, Error, Warn, Info
+  - 텍스트 검색 입력
+- [ ] 필터링 로직 구현
+- [ ] 로그 내보내기 버튼
+  - 현재 로그를 파일로 저장
 
-5. **LICENSE 파일 누락**
-   - 위치: 프로젝트 루트
-   - 문제: README에는 MIT 라이센스 명시했으나 실제 파일 없음
-   - 위험: 법적 효력 불명확
-   - 해결: MIT LICENSE 파일 생성
-
-### P1 - 단기 개선
-
-1. **AppState 미사용**
-   - 문제: AppState 구조체 정의했으나 실제로 사용하지 않음
-   - 영향: 매번 새 DevTunnelClient 생성, active_hosts 추적 무의미
-   - 해결: Tauri State 관리 기능으로 싱글톤 패턴 적용
-
-2. **파싱 로직 취약성** ✅ 확인 완료
-   - 문제: CLI 텍스트 출력을 정규식/문자열로 파싱
-   - 위험: DevTunnel CLI 업데이트 시 파싱 실패
-   - 해결: `--output json` 옵션 활용 (DevTunnel CLI에서 `-j, --json` 옵션 지원 확인됨)
-   - 참고: 대규모 리팩토링 필요, 추후 별도 작업으로 진행
-
-3. **미구현 함수**
-   - 위치: `list_ports()`, `list_clusters()`
-   - 문제: 항상 빈 Vec 반환, 실제 파싱 로직 없음
-   - 해결: 실제 파싱 구현
-
-## 작업 계획
-
-### Phase 1: P0 보안 패치 (우선순위: 최고)
-
-- [ ] 1. Command Injection 방지
-  - [ ] tunnel_id 입력 검증 정규식 추가
-  - [ ] stop_tunnel 함수 보안 강화
-
-- [ ] 2. 프로세스 리소스 관리
-  - [ ] ProcessManager 구조체 설계
-  - [ ] 프로세스 생명주기 관리 구현
-  - [ ] std::mem::forget 제거
-
-- [ ] 3. 경로 하드코딩 제거
-  - [ ] which 크레이트 추가
-  - [ ] get_devtunnel_path() 유틸 함수 구현
-  - [ ] 모든 commands.rs 함수에 적용
-
-- [ ] 4. CSP 활성화
-  - [ ] tauri.conf.json에 CSP 정책 추가
-  - [ ] 필요한 리소스만 허용하도록 설정
-
-- [ ] 5. LICENSE 파일 생성
-  - [ ] MIT LICENSE 템플릿 생성
-  - [ ] 저작권 정보 추가
-
-### Phase 2: P1 아키텍처 개선 (우선순위: 중)
-
-- [ ] 6. AppState 활용
-  - [ ] Tauri State로 DevTunnelClient 관리
-  - [ ] 싱글톤 패턴 적용
-
-- [ ] 7. JSON 파싱 전환
-  - [ ] DevTunnel CLI의 --output json 옵션 확인
-  - [ ] 파싱 로직을 JSON 기반으로 리팩토링
-
-- [ ] 8. 미구현 함수 완성
-  - [ ] list_ports() 실제 구현
-  - [ ] list_clusters() 실제 구현
+---
 
 ## 진행 상황
 
-- [x] Phase 1 완료 (2025-12-17)
-  - [x] Command Injection 방지
-  - [x] 프로세스 리소스 누수 해결
-  - [x] 하드코딩된 경로 제거
-  - [x] CSP 활성화
-  - [x] LICENSE 파일 생성
-- [x] Phase 2 부분 완료 (2025-12-17)
-  - [x] JSON 파싱 지원 확인
-  - [x] 미구현 함수 완성 (list_ports, list_clusters)
-  - [ ] AppState를 Tauri State로 전환 (향후 과제)
-  - [ ] JSON 파싱 전면 전환 (향후 과제)
-- [x] 빌드 성공
-- [x] 문서 업데이트
+### Phase 1: P0 (Critical)
+- [ ] URL 검증 추가
+- [ ] 접근성 개선
+- [ ] 에러 복구 메커니즘
+
+### Phase 2: P1 (High)
+- [ ] AppState Singleton
+- [ ] API 에러 처리 통합
+- [ ] Store 분리
+- [ ] 사용자 설정 저장
+- [ ] 앱 업데이트 메커니즘
+
+### Phase 3: P2 (Medium)
+- [ ] 공통 UI 컴포넌트
+- [ ] CSP 정책 개선
+- [ ] 로그 필터링/검색
+
+---
 
 ## 메모
 
-### 기술 스택
-- Frontend: React 19 + TypeScript + Tailwind CSS + Zustand
-- Backend: Rust + Tauri 2.0
-- CLI Wrapper: Microsoft DevTunnel CLI
+### 예상 작업 시간
+- Phase 1 (P0): 9-13시간
+- Phase 2 (P1): 12-18시간
+- Phase 3 (P2): 9-13시간
+- **총 예상 시간: 30-44시간**
 
-### 주요 파일
-- `src-tauri/src/devtunnel.rs:168-173` - N+1 Query 발생 지점
-- `src-tauri/src/commands.rs` - Tauri 커맨드 핸들러 (로그 개선 필요)
-- `src/components/Logs/LogsViewer.tsx` - 로그 뷰어 (정상 작동)
+### 브랜치 전략
+- Branch: `refactor/comprehensive-improvements`
+- 각 Phase별로 sub-commit 생성
+- Phase 완료 시 통합 커밋
+
+### 커밋 전략
+- Phase 1 완료 시: `refactor(security): P0 보안 및 접근성 개선`
+- Phase 2 완료 시: `refactor(architecture): P1 아키텍처 개선`
+- Phase 3 완료 시: `refactor(ui): P2 UI 개선`
+
+---
+
+## 이전 완료 내역
+
+### v0.5.0 (2025-12-17)
+- ✅ 성능 최적화 (N+1 Query 해결)
+  - 경량 목록 함수 추가 (list_tunnels_light)
+  - 병렬 처리 함수 추가 (enrich_tunnel_details)
+- ✅ 포괄적 캐싱 시스템 구현
+  - 터널 상세 정보 캐싱
+  - 탭 전환 즉시 응답
+
+### v0.4.0 (2025-12-17)
+- ✅ 코드 리뷰 및 품질 개선
+  - Toast/Notification 시스템 도입
+  - 성능 최적화 (캐싱)
+  - 보안 수정 (하드코딩 경로 제거)
+
+### v0.2.0 (2025-12-17)
+- ✅ P0 보안 패치
+  - Command Injection 취약점 수정
+  - 프로세스 리소스 누수 해결
+  - CSP 보안 정책 활성화
+
+### v0.1.0 (2025-12-17)
+- ✅ 초기 구현
+  - 로그 시스템 개선 (18개 커맨드)
+  - 기본 CRUD 기능

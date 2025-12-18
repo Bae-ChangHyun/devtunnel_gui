@@ -36,6 +36,13 @@ function TunnelCard({ tunnel, onRefresh }: TunnelCardProps) {
     selectTunnel(tunnel);
   }, [selectTunnel, tunnel]);
 
+  const handleSelectKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      selectTunnel(tunnel);
+    }
+  }, [selectTunnel, tunnel]);
+
   const handleManage = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     selectTunnel(tunnel);
@@ -72,7 +79,11 @@ function TunnelCard({ tunnel, onRefresh }: TunnelCardProps) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={handleSelect}
+      onKeyDown={handleSelectKeyDown}
+      aria-label={`Tunnel ${tunnel.tunnelId}`}
       className="card hover:bg-dark-600/50 cursor-pointer transition-all duration-200 group relative"
     >
       <div className="relative">
@@ -147,6 +158,7 @@ function TunnelCard({ tunnel, onRefresh }: TunnelCardProps) {
             disabled={isDeleting}
             className="px-4 py-2 bg-dark-700 hover:bg-red-500/10 text-zinc-400 hover:text-red-400 rounded-lg text-xs font-medium transition-all disabled:opacity-50"
             title="Delete tunnel"
+            aria-label={`Delete tunnel ${tunnel.tunnelId}`}
           >
             {isDeleting ? '...' : '🗑'}
           </button>

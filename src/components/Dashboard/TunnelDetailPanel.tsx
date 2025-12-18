@@ -174,7 +174,7 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 border-b border-zinc-800 flex-shrink-0">
+        <div className="flex gap-1 mb-6 border-b border-zinc-800 flex-shrink-0" role="tablist" aria-label="Tunnel details tabs">
           {[
             { id: 'info', label: 'Information' },
             { id: 'ports', label: 'Ports' },
@@ -182,6 +182,9 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
           ].map((tab) => (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`${tab.id}-panel`}
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-4 py-2.5 font-medium text-sm transition-all relative ${
                 activeTab === tab.id

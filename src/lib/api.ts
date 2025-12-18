@@ -41,6 +41,47 @@ async function invokeCommand<T>(
   return response.data;
 }
 
+// Helper function for exponential backoff delay
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Command invocation with automatic retry logic
+async function invokeCommandWithRetry<T>(
+  command: string,
+  args?: Record<string, unknown>,
+  errorMessage?: string,
+  maxRetries = 3
+): Promise<T> {
+  let lastError: ApiError | null = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await invokeCommand<T>(command, args, errorMessage);
+    } catch (error) {
+      lastError = error as ApiError;
+
+      // Don't retry on certain error types (authentication, validation, etc.)
+      if (lastError.message.includes('authentication') ||
+          lastError.message.includes('not found') ||
+          lastError.message.includes('invalid')) {
+        throw lastError;
+      }
+
+      // On last attempt, throw the error
+      if (attempt === maxRetries - 1) {
+        throw lastError;
+      }
+
+      // Exponential backoff: wait 1s, 2s, 4s, etc.
+      const delayMs = 1000 * Math.pow(2, attempt);
+      await delay(delayMs);
+    }
+  }
+
+  throw lastError;
+}
+
 // Authentication API
 export const authApi = {
   login: async (provider: 'microsoft' | 'github', useDeviceCode = false): Promise<string> => {

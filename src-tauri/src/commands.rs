@@ -572,6 +572,22 @@ pub fn check_devtunnel_installation() -> CommandResponse<DevTunnelInfo> {
 #[tauri::command]
 pub fn open_url(url: String) -> CommandResponse<String> {
     use std::process::Command;
+    use url::Url;
+
+    // Validate URL: only allow http/https schemes
+    match Url::parse(&url) {
+        Ok(parsed) => {
+            let scheme = parsed.scheme();
+            if scheme != "http" && scheme != "https" {
+                return CommandResponse::error(
+                    format!("Invalid URL scheme: {}. Only http/https are allowed.", scheme)
+                );
+            }
+        }
+        Err(e) => {
+            return CommandResponse::error(format!("Invalid URL format: {}", e));
+        }
+    }
 
     #[cfg(target_os = "linux")]
     let command_result = Command::new("xdg-open").arg(&url).spawn();

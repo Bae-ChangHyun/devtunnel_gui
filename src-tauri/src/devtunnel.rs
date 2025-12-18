@@ -881,6 +881,16 @@ impl DevTunnelClient {
     pub fn ping_port(&self, url: String) -> Result<PingResult> {
         use std::time::Instant;
 
+        // Validate URL: only allow http/https schemes and prevent curl option injection
+        if !url.starts_with("http://") && !url.starts_with("https://") {
+            return Err(anyhow::anyhow!("Only HTTP/HTTPS URLs are allowed"));
+        }
+
+        // Prevent curl option injection by checking for dash characters that could be interpreted as options
+        if url.contains(" -") || url.starts_with("-") {
+            return Err(anyhow::anyhow!("Invalid URL format: potential option injection detected"));
+        }
+
         let start = Instant::now();
 
         let output = Command::new("curl")
