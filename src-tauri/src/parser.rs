@@ -48,6 +48,18 @@ pub fn parse_tunnel_list(output: &str) -> Vec<TunnelListItem> {
         // First part is always the tunnel ID
         let tunnel_id = parts[0].to_string();
 
+        // Filter out header keywords that might be mistaken for tunnel IDs
+        // Valid tunnel IDs typically contain dots or hyphens
+        if tunnel_id == "Tunnel" || tunnel_id == "Found" || tunnel_id == "ID" {
+            continue;
+        }
+
+        // Additional validation: tunnel IDs should have a reasonable format
+        // Skip if it's a common header word
+        if !tunnel_id.contains('.') && !tunnel_id.contains('-') {
+            continue;
+        }
+
         // Find "days" or "day" keyword to locate expiration
         let expiration_keyword_idx = parts.iter().position(|&p| p == "days" || p == "day");
 
