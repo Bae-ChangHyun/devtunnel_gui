@@ -19,12 +19,10 @@ fn get_devtunnel_path() -> String {
         .unwrap_or_else(|_| "devtunnel".to_string())
 }
 
-#[allow(dead_code)]
 pub struct AppState {
     pub client: Mutex<DevTunnelClient>,
 }
 
-#[allow(dead_code)]
 impl AppState {
     pub fn new() -> Self {
         Self {

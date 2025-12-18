@@ -100,212 +100,92 @@ export const authApi = {
 // Tunnel Management API
 export const tunnelApi = {
   create: async (req: CreateTunnelRequest): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('create_tunnel', { req });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to create tunnel');
-    }
-
-    return response.data;
+    return invokeCommand<string>('create_tunnel', { req }, 'Failed to create tunnel');
   },
 
   list: async (req?: ListTunnelsRequest): Promise<TunnelListItem[]> => {
-    const response = await invoke<CommandResponse<TunnelListItem[]>>('list_tunnels', { req });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to list tunnels');
-    }
-
-    return response.data;
+    return invokeCommand<TunnelListItem[]>('list_tunnels', { req }, 'Failed to list tunnels');
   },
 
   show: async (tunnelId?: string): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('show_tunnel', { tunnelId });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to show tunnel');
-    }
-
-    return response.data;
+    return invokeCommand<string>('show_tunnel', { tunnelId }, 'Failed to show tunnel');
   },
 
   update: async (req: UpdateTunnelRequest): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('update_tunnel', { req });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to update tunnel');
-    }
-
-    return response.data;
+    return invokeCommand<string>('update_tunnel', { req }, 'Failed to update tunnel');
   },
 
   delete: async (tunnelId: string): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('delete_tunnel', { tunnelId });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to delete tunnel');
-    }
-
-    return response.data;
+    return invokeCommand<string>('delete_tunnel', { tunnelId }, 'Failed to delete tunnel');
   },
 
   deleteAll: async (): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('delete_all_tunnels');
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to delete all tunnels');
-    }
-
-    return response.data;
+    return invokeCommand<string>('delete_all_tunnels', undefined, 'Failed to delete all tunnels');
   },
 
   host: async (req: HostTunnelRequest): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('host_tunnel', { req });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to host tunnel');
-    }
-
-    return response.data;
+    return invokeCommand<string>('host_tunnel', { req }, 'Failed to host tunnel');
   },
 
   stop: async (tunnelId: string): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('stop_tunnel', { tunnelId });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to stop tunnel');
-    }
-
-    return response.data;
+    return invokeCommand<string>('stop_tunnel', { tunnelId }, 'Failed to stop tunnel');
   },
 
   restart: async (req: HostTunnelRequest): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('restart_tunnel', { req });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to restart tunnel');
-    }
-
-    return response.data;
+    return invokeCommand<string>('restart_tunnel', { req }, 'Failed to restart tunnel');
   },
 
   getStartTime: async (tunnelId: string): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('get_tunnel_start_time', { tunnelId });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to get tunnel start time');
-    }
-
-    return response.data;
+    return invokeCommand<string>('get_tunnel_start_time', { tunnelId }, 'Failed to get tunnel start time');
   },
 };
 
 // Port Management API
 export const portApi = {
   create: async (req: CreatePortRequest): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('create_port', { req });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to create port');
-    }
-
-    return response.data;
+    return invokeCommand<string>('create_port', { req }, 'Failed to create port');
   },
 
   list: async (tunnelId: string): Promise<Port[]> => {
-    const response = await invoke<CommandResponse<Port[]>>('list_ports', { tunnelId });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to list ports');
-    }
-
-    return response.data;
+    return invokeCommand<Port[]>('list_ports', { tunnelId }, 'Failed to list ports');
   },
 
   show: async (tunnelId: string, portNumber: number): Promise<Port> => {
-    const response = await invoke<CommandResponse<Port>>('show_port', { tunnelId, portNumber });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to show port');
-    }
-
-    return response.data;
+    return invokeCommand<Port>('show_port', { tunnelId, portNumber }, 'Failed to show port');
   },
 
   update: async (req: UpdatePortRequest): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('update_port', { req });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to update port');
-    }
-
-    return response.data;
+    return invokeCommand<string>('update_port', { req }, 'Failed to update port');
   },
 
   delete: async (tunnelId: string, port: number): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('delete_port', { tunnelId, port });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to delete port');
-    }
-
-    return response.data;
+    return invokeCommand<string>('delete_port', { tunnelId, port }, 'Failed to delete port');
   },
 
   ping: async (url: string): Promise<PingResult> => {
-    const response = await invoke<CommandResponse<PingResult>>('ping_port', { url });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to ping port');
-    }
-
-    return response.data;
+    return invokeCommand<PingResult>('ping_port', { url }, 'Failed to ping port');
   },
 };
 
 // Access Control API
 export const accessApi = {
   create: async (req: CreateAccessRequest): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('create_access', { req });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to create access');
-    }
-
-    return response.data;
+    return invokeCommand<string>('create_access', { req }, 'Failed to create access');
   },
 
   list: async (tunnelId: string): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('list_access', { tunnelId });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to list access');
-    }
-
-    return response.data;
+    return invokeCommand<string>('list_access', { tunnelId }, 'Failed to list access');
   },
 
   reset: async (tunnelId: string): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('reset_access', { tunnelId });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to reset access');
-    }
-
-    return response.data;
+    return invokeCommand<string>('reset_access', { tunnelId }, 'Failed to reset access');
   },
 };
 
 // Cluster API
 export const clusterApi = {
   list: async (ping = false): Promise<Cluster[]> => {
-    const response = await invoke<CommandResponse<Cluster[]>>('list_clusters', { ping });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to list clusters');
-    }
-
-    return response.data;
+    return invokeCommand<Cluster[]>('list_clusters', { ping }, 'Failed to list clusters');
   },
 };
 
@@ -318,22 +198,10 @@ export interface DevTunnelInfo {
 
 export const systemApi = {
   checkDevTunnelInstallation: async (): Promise<DevTunnelInfo> => {
-    const response = await invoke<CommandResponse<DevTunnelInfo>>('check_devtunnel_installation');
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to check DevTunnel installation');
-    }
-
-    return response.data;
+    return invokeCommand<DevTunnelInfo>('check_devtunnel_installation', undefined, 'Failed to check DevTunnel installation');
   },
 
   openUrl: async (url: string): Promise<string> => {
-    const response = await invoke<CommandResponse<string>>('open_url', { url });
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to open URL');
-    }
-
-    return response.data;
+    return invokeCommand<string>('open_url', { url }, 'Failed to open URL');
   },
 };

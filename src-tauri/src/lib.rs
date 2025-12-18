@@ -9,6 +9,7 @@ use commands::*;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .manage(AppState::new())
         .invoke_handler(tauri::generate_handler![
             // Authentication
             login_devtunnel,
