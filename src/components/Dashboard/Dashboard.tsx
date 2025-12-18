@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useTunnelStore } from '../../stores/tunnelStore';
+import { useUiStore } from '../../stores/uiStore';
 import { tunnelApi } from '../../lib/api';
 import TunnelCard from './TunnelCard';
 import CreateTunnelModal from './CreateTunnelModal';
 import TunnelDetailPanel from './TunnelDetailPanel';
 
 export default function Dashboard() {
-  const { tunnels, setTunnels, setLoading, setError, selectedTunnel, isTunnelListCacheValid, invalidateTunnelList } = useTunnelStore();
+  const { tunnels, setTunnels, setLoading, setError, isTunnelListCacheValid, invalidateTunnelList } = useTunnelStore();
+  const { selectedTunnel } = useUiStore();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [filterTag, setFilterTag] = useState('');
 

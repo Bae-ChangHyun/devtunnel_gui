@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTunnelStore } from '../../stores/tunnelStore';
+import { useUiStore } from '../../stores/uiStore';
 import { tunnelApi } from '../../lib/api';
 import { toast } from '../Toast';
 import PortManager from './PortManager';
@@ -22,7 +23,8 @@ interface TunnelDetailPanelProps {
 }
 
 export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetailPanelProps) {
-  const { selectedTunnel, selectTunnel, getTunnelDetails, setTunnelDetails: setCachedTunnelDetails, invalidateTunnelDetails } = useTunnelStore();
+  const { getTunnelDetails, setTunnelDetails: setCachedTunnelDetails, invalidateTunnelDetails } = useTunnelStore();
+  const { selectedTunnel, selectTunnel } = useUiStore();
   const [activeTab, setActiveTab] = useState<'info' | 'ports' | 'access'>('info');
   const [tunnelDetails, setTunnelDetails] = useState<string>('');
   const [_isLoading, setIsLoading] = useState(false);

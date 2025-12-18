@@ -1,13 +1,20 @@
+import { useAuthStore } from '../../stores/authStore';
+import { useUiStore } from '../../stores/uiStore';
 import { useTunnelStore } from '../../stores/tunnelStore';
 import { authApi } from '../../lib/api';
 
 export default function Header() {
-  const { userInfo, reset } = useTunnelStore();
+  const { userInfo, logout: logoutAuth } = useAuthStore();
+  const { reset: resetUi } = useUiStore();
+  const { reset: resetTunnels } = useTunnelStore();
 
   const handleLogout = async () => {
     try {
       await authApi.logout();
-      reset();
+      // Reset all stores
+      logoutAuth();
+      resetUi();
+      resetTunnels();
     } catch (error) {
       console.error('Logout failed:', error);
     }

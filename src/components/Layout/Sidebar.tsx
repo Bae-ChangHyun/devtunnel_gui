@@ -1,7 +1,7 @@
-import { useTunnelStore } from '../../stores/tunnelStore';
+import { useUiStore } from '../../stores/uiStore';
 
 export default function Sidebar() {
-  const { activeTab, setActiveTab } = useTunnelStore();
+  const { activeTab, setActiveTab } = useUiStore();
 
   const menuItems = [
     { id: 'dashboard', name: 'Dashboard' },

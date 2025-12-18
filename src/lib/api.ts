@@ -46,8 +46,8 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Command invocation with automatic retry logic
-async function invokeCommandWithRetry<T>(
+// Command invocation with automatic retry logic (exported for future use)
+export async function invokeCommandWithRetry<T>(
   command: string,
   args?: Record<string, unknown>,
   errorMessage?: string,

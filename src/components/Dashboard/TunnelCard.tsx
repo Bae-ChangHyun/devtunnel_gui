@@ -1,6 +1,6 @@
 import { useState, memo, useMemo, useCallback } from 'react';
 import type { TunnelListItem } from '../../types/devtunnel';
-import { useTunnelStore } from '../../stores/tunnelStore';
+import { useUiStore } from '../../stores/uiStore';
 import { tunnelApi } from '../../lib/api';
 import { toast } from '../Toast';
 
@@ -10,7 +10,7 @@ interface TunnelCardProps {
 }
 
 function TunnelCard({ tunnel, onRefresh }: TunnelCardProps) {
-  const { selectTunnel } = useTunnelStore();
+  const { selectTunnel } = useUiStore();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = useCallback(async (e: React.MouseEvent) => {

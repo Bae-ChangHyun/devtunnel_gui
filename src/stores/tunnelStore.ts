@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { TunnelListItem, UserInfo } from '../types/devtunnel';
+import type { TunnelListItem } from '../types/devtunnel';
 import type { DevTunnelInfo } from '../lib/api';
 
 // Cache configuration
@@ -16,29 +16,23 @@ interface DevTunnelInfoCache {
 }
 
 interface TunnelStore {
+  // Tunnel data
   tunnels: TunnelListItem[];
   tunnelsLastFetched: number | null;
-  selectedTunnel: TunnelListItem | null;
   isLoading: boolean;
   error: string | null;
-  userInfo: UserInfo | null;
-  isAuthenticated: boolean;
-  activeTab: string;
+
+  // Cache
   tunnelDetailsCache: Map<string, TunnelDetailsCache>;
   devTunnelInfoCache: DevTunnelInfoCache | null;
 
-  // Actions
+  // Tunnel actions
   setTunnels: (tunnels: TunnelListItem[]) => void;
   addTunnel: (tunnel: TunnelListItem) => void;
   updateTunnel: (tunnelId: string, updates: Partial<TunnelListItem>) => void;
   removeTunnel: (tunnelId: string) => void;
-  selectTunnel: (tunnel: TunnelListItem | null) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
-  setUserInfo: (userInfo: UserInfo | null) => void;
-  setAuthenticated: (isAuthenticated: boolean) => void;
-  setActiveTab: (tab: string) => void;
-  reset: () => void;
 
   // Cache actions
   getTunnelDetails: (tunnelId: string) => string | null;
@@ -49,20 +43,21 @@ interface TunnelStore {
   invalidateTunnelList: () => void;
   getDevTunnelInfo: () => DevTunnelInfo | null;
   setDevTunnelInfo: (info: DevTunnelInfo) => void;
+
+  // Reset
+  reset: () => void;
 }
 
 export const useTunnelStore = create<TunnelStore>((set, get) => ({
+  // Initial state
   tunnels: [],
   tunnelsLastFetched: null,
-  selectedTunnel: null,
   isLoading: false,
   error: null,
-  userInfo: null,
-  isAuthenticated: false,
-  activeTab: 'dashboard',
   tunnelDetailsCache: new Map(),
   devTunnelInfoCache: null,
 
+  // Tunnel actions
   setTunnels: (tunnels) => set({ tunnels, tunnelsLastFetched: Date.now() }),
 
   addTunnel: (tunnel) => set((state) => ({
@@ -74,43 +69,16 @@ export const useTunnelStore = create<TunnelStore>((set, get) => ({
     tunnels: state.tunnels.map((t) =>
       t.tunnelId === tunnelId ? { ...t, ...updates } : t
     ),
-    selectedTunnel:
-      state.selectedTunnel?.tunnelId === tunnelId
-        ? { ...state.selectedTunnel, ...updates }
-        : state.selectedTunnel,
   })),
 
   removeTunnel: (tunnelId) => set((state) => ({
     tunnels: state.tunnels.filter((t) => t.tunnelId !== tunnelId),
-    selectedTunnel:
-      state.selectedTunnel?.tunnelId === tunnelId ? null : state.selectedTunnel,
     tunnelsLastFetched: Date.now(),
   })),
-
-  selectTunnel: (tunnel) => set({ selectedTunnel: tunnel }),
 
   setLoading: (isLoading) => set({ isLoading }),
 
   setError: (error) => set({ error }),
-
-  setUserInfo: (userInfo) => set({ userInfo }),
-
-  setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
-
-  setActiveTab: (activeTab) => set({ activeTab }),
-
-  reset: () => set({
-    tunnels: [],
-    tunnelsLastFetched: null,
-    selectedTunnel: null,
-    isLoading: false,
-    error: null,
-    userInfo: null,
-    isAuthenticated: false,
-    activeTab: 'dashboard',
-    tunnelDetailsCache: new Map(),
-    devTunnelInfoCache: null,
-  }),
 
   // Cache methods
   getDevTunnelInfo: () => {
@@ -184,6 +152,18 @@ export const useTunnelStore = create<TunnelStore>((set, get) => ({
   },
 
   clearAllCache: () => {
-    set({ tunnelDetailsCache: new Map() });
+    set({
+      tunnelDetailsCache: new Map(),
+      devTunnelInfoCache: null,
+    });
   },
+
+  reset: () => set({
+    tunnels: [],
+    tunnelsLastFetched: null,
+    isLoading: false,
+    error: null,
+    tunnelDetailsCache: new Map(),
+    devTunnelInfoCache: null,
+  }),
 }));

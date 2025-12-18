@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useAuthStore } from './stores/authStore';
+import { useUiStore } from './stores/uiStore';
 import { useTunnelStore } from './stores/tunnelStore';
 import { authApi } from './lib/api';
 import Dashboard from './components/Dashboard/Dashboard';
@@ -11,7 +13,9 @@ import { ToastContainer } from './components/Toast';
 import './index.css';
 
 function App() {
-  const { isAuthenticated, setAuthenticated, setUserInfo, activeTab, clearAllCache } = useTunnelStore();
+  const { isAuthenticated, setAuthenticated, setUserInfo } = useAuthStore();
+  const { activeTab } = useUiStore();
+  const { clearAllCache } = useTunnelStore();
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {

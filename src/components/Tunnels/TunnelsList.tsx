@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { useTunnelStore } from '../../stores/tunnelStore';
+import { useUiStore } from '../../stores/uiStore';
 import { tunnelApi } from '../../lib/api';
 
 export default function TunnelsList() {
-  const { tunnels, setTunnels, setLoading, setError, selectTunnel } = useTunnelStore();
+  const { tunnels, setTunnels, setLoading, setError } = useTunnelStore();
+  const { selectTunnel } = useUiStore();
 
   useEffect(() => {
     loadTunnels();
