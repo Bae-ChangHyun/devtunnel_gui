@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { getVersion } from '@tauri-apps/api/app';
 import { systemApi, type DevTunnelInfo } from '../../lib/api';
 import { toast } from '../../components/Toast';
+import { useTunnelStore } from '../../stores/tunnelStore';
 
 export default function Settings() {
+  const { getDevTunnelInfo, setDevTunnelInfo: setCachedDevTunnelInfo } = useTunnelStore();
   const [devTunnelInfo, setDevTunnelInfo] = useState<DevTunnelInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [appVersion, setAppVersion] = useState<string>('Loading...');
@@ -23,11 +25,22 @@ export default function Settings() {
     }
   };
 
-  const checkInstallation = async () => {
+  const checkInstallation = async (forceRefresh = false) => {
+    // Check cache first
+    if (!forceRefresh) {
+      const cached = getDevTunnelInfo();
+      if (cached) {
+        setDevTunnelInfo(cached);
+        setIsLoading(false);
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       const info = await systemApi.checkDevTunnelInstallation();
       setDevTunnelInfo(info);
+      setCachedDevTunnelInfo(info);
     } catch (error) {
       console.error('Failed to check DevTunnel installation:', error);
     } finally {
@@ -137,7 +150,7 @@ export default function Settings() {
                   Open Installation Guide
                 </button>
                 <button
-                  onClick={checkInstallation}
+                  onClick={() => checkInstallation(true)}
                   className="btn-secondary"
                 >
                   Recheck Installation

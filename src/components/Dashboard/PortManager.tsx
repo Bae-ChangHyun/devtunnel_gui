@@ -21,6 +21,8 @@ export default function PortManager({ tunnelId, onPortsChanged, tunnelDetails: p
   const [editProtocol, setEditProtocol] = useState<Protocol>('auto');
   const [pingingPort, setPingingPort] = useState<number | null>(null);
   const [pingResults, setPingResults] = useState<Map<number, { success: boolean; time: number; status?: number }>>(new Map());
+  const [loadingDetails, setLoadingDetails] = useState<Set<number>>(new Set());
+  const [expandedPorts, setExpandedPorts] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadPorts();
@@ -33,8 +35,12 @@ export default function PortManager({ tunnelId, onPortsChanged, tunnelDetails: p
       const details = propTunnelDetails || await tunnelApi.show(tunnelId);
 
       // Parse ports from the raw details output
-      const portNumbers: number[] = [];
-      const portUrls: Map<number, string> = new Map();
+      interface ParsedPort {
+        portNumber: number;
+        protocol: Protocol;
+        url?: string;
+      }
+      const parsedPorts: ParsedPort[] = [];
       const lines = details.split('\n');
       let inPortsSection = false;
 
@@ -52,16 +58,21 @@ export default function PortManager({ tunnelId, onPortsChanged, tunnelDetails: p
           // Try to match: portNumber  protocol  url (optional)
           const matchWithUrl = trimmed.match(/^(\d+)\s+(\w+)\s+(https?:\/\/[^\s]+)/);
           if (matchWithUrl) {
-            const [, portNum, , uri] = matchWithUrl;
-            const portNumber = parseInt(portNum);
-            portNumbers.push(portNumber);
-            portUrls.set(portNumber, uri);
+            const [, portNum, protocol, uri] = matchWithUrl;
+            parsedPorts.push({
+              portNumber: parseInt(portNum),
+              protocol: protocol.toLowerCase() as Protocol,
+              url: uri,
+            });
           } else {
             // Try to match: portNumber  protocol (no url - tunnel not hosted)
             const matchWithoutUrl = trimmed.match(/^(\d+)\s+(\w+)\s*$/);
             if (matchWithoutUrl) {
-              const [, portNum] = matchWithoutUrl;
-              portNumbers.push(parseInt(portNum));
+              const [, portNum, protocol] = matchWithoutUrl;
+              parsedPorts.push({
+                portNumber: parseInt(portNum),
+                protocol: protocol.toLowerCase() as Protocol,
+              });
             }
           }
         } else if (inPortsSection && trimmed.match(/^Tunnel/)) {
@@ -70,27 +81,14 @@ export default function PortManager({ tunnelId, onPortsChanged, tunnelDetails: p
         }
       }
 
-      // Now fetch full details for each port in parallel to get description
-      const portPromises = portNumbers.map(async (portNumber) => {
-        try {
-          const portDetails = await portApi.show(tunnelId, portNumber);
-          // Add the URL if it was found in the tunnel show output
-          if (portUrls.has(portNumber)) {
-            portDetails.portForwardingUris = [portUrls.get(portNumber)!];
-          }
-          return portDetails;
-        } catch (error) {
-          console.error(`Failed to get details for port ${portNumber}:`, error);
-          // Fallback to basic info if port show fails
-          return {
-            portNumber,
-            protocol: 'auto' as const,
-            portForwardingUris: portUrls.has(portNumber) ? [portUrls.get(portNumber)!] : [],
-          };
-        }
-      });
+      // Create basic port objects without descriptions (lazy load on demand)
+      const portList = parsedPorts.map((parsed) => ({
+        portNumber: parsed.portNumber,
+        protocol: parsed.protocol,
+        portForwardingUris: parsed.url ? [parsed.url] : [],
+        description: undefined,
+      }));
 
-      const portList = await Promise.all(portPromises);
       setPorts(portList);
     } catch (error) {
       console.error('Failed to load ports:', error);
@@ -203,6 +201,49 @@ export default function PortManager({ tunnelId, onPortsChanged, tunnelDetails: p
     setEditingPort(null);
     setEditDescription('');
     setEditProtocol('auto');
+  };
+
+  const handleLoadPortDetails = async (portNumber: number) => {
+    // Toggle expanded state
+    const newExpandedPorts = new Set(expandedPorts);
+    if (newExpandedPorts.has(portNumber)) {
+      newExpandedPorts.delete(portNumber);
+      setExpandedPorts(newExpandedPorts);
+      return;
+    }
+
+    newExpandedPorts.add(portNumber);
+    setExpandedPorts(newExpandedPorts);
+
+    // If already loaded, don't fetch again
+    const existingPort = ports.find(p => p.portNumber === portNumber);
+    if (existingPort?.description !== undefined) {
+      return;
+    }
+
+    // Fetch port details
+    setLoadingDetails(prev => new Set(prev).add(portNumber));
+    try {
+      const portDetails = await portApi.show(tunnelId, portNumber);
+
+      // Update the port in the list with the fetched details
+      setPorts(prevPorts =>
+        prevPorts.map(p =>
+          p.portNumber === portNumber
+            ? { ...p, description: portDetails.description, protocol: portDetails.protocol }
+            : p
+        )
+      );
+    } catch (error) {
+      console.error(`Failed to load details for port ${portNumber}:`, error);
+      toast.error(`Failed to load port details: ${error}`);
+    } finally {
+      setLoadingDetails(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(portNumber);
+        return newSet;
+      });
+    }
   };
 
   const handlePing = async (port: Port) => {
@@ -349,21 +390,36 @@ export default function PortManager({ tunnelId, onPortsChanged, tunnelDetails: p
                           <span className="badge badge-info">
                             {port.protocol}
                           </span>
-                          {port.description ? (
-                            <span className="text-sm text-gray-400">
-                              {port.description}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-gray-600 italic">
-                              No description
-                            </span>
-                          )}
                           <button
-                            onClick={() => handleEditPort(port)}
+                            onClick={() => handleLoadPortDetails(port.portNumber)}
                             className="text-xs text-primary-400 hover:text-primary-300"
+                            disabled={loadingDetails.has(port.portNumber)}
                           >
-                            Edit
+                            {loadingDetails.has(port.portNumber)
+                              ? 'Loading...'
+                              : expandedPorts.has(port.portNumber)
+                                ? 'Hide Details'
+                                : 'Show Details'}
                           </button>
+                          {expandedPorts.has(port.portNumber) && (
+                            <>
+                              {port.description ? (
+                                <span className="text-sm text-gray-400">
+                                  {port.description}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-gray-600 italic">
+                                  No description
+                                </span>
+                              )}
+                              <button
+                                onClick={() => handleEditPort(port)}
+                                className="text-xs text-primary-400 hover:text-primary-300"
+                              >
+                                Edit
+                              </button>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>

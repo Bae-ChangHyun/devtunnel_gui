@@ -6,15 +6,23 @@ import CreateTunnelModal from './CreateTunnelModal';
 import TunnelDetailPanel from './TunnelDetailPanel';
 
 export default function Dashboard() {
-  const { tunnels, setTunnels, setLoading, setError, selectedTunnel } = useTunnelStore();
+  const { tunnels, setTunnels, setLoading, setError, selectedTunnel, isTunnelListCacheValid, invalidateTunnelList } = useTunnelStore();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [filterTag, setFilterTag] = useState('');
 
   useEffect(() => {
-    loadTunnels();
+    // Only load tunnels if cache is invalid
+    if (!isTunnelListCacheValid()) {
+      loadTunnels();
+    }
   }, []);
 
-  const loadTunnels = async () => {
+  const loadTunnels = async (forceRefresh = false) => {
+    // Check cache before loading
+    if (!forceRefresh && isTunnelListCacheValid()) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -109,7 +117,14 @@ export default function Dashboard() {
           </div>
         ) : (
           filteredTunnels.map((tunnel) => (
-            <TunnelCard key={tunnel.tunnelId} tunnel={tunnel} onRefresh={loadTunnels} />
+            <TunnelCard
+              key={tunnel.tunnelId}
+              tunnel={tunnel}
+              onRefresh={() => {
+                invalidateTunnelList();
+                loadTunnels(true);
+              }}
+            />
           ))
         )}
       </div>
@@ -120,13 +135,21 @@ export default function Dashboard() {
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={() => {
             setIsCreateModalOpen(false);
-            loadTunnels();
+            invalidateTunnelList();
+            loadTunnels(true);
           }}
         />
       )}
 
       {/* Detail Panel */}
-      {selectedTunnel && <TunnelDetailPanel onRefresh={loadTunnels} />}
+      {selectedTunnel && (
+        <TunnelDetailPanel
+          onRefresh={() => {
+            invalidateTunnelList();
+            loadTunnels(true);
+          }}
+        />
+      )}
     </div>
   );
 }

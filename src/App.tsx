@@ -11,7 +11,7 @@ import { ToastContainer } from './components/Toast';
 import './index.css';
 
 function App() {
-  const { isAuthenticated, setAuthenticated, setUserInfo, activeTab } = useTunnelStore();
+  const { isAuthenticated, setAuthenticated, setUserInfo, activeTab, clearAllCache } = useTunnelStore();
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
@@ -23,6 +23,8 @@ function App() {
       const userInfo = await authApi.getUserInfo();
       setUserInfo(userInfo);
       setAuthenticated(true);
+      // Clear cache when logging in (might be a different user)
+      clearAllCache();
     } catch (error) {
       setAuthenticated(false);
     } finally {

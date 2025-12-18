@@ -22,7 +22,7 @@ interface TunnelDetailPanelProps {
 }
 
 export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetailPanelProps) {
-  const { selectedTunnel, selectTunnel } = useTunnelStore();
+  const { selectedTunnel, selectTunnel, getTunnelDetails, setTunnelDetails: setCachedTunnelDetails, invalidateTunnelDetails } = useTunnelStore();
   const [activeTab, setActiveTab] = useState<'info' | 'ports' | 'access'>('info');
   const [tunnelDetails, setTunnelDetails] = useState<string>('');
   const [_isLoading, setIsLoading] = useState(false);
@@ -32,43 +32,57 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
   const [isRestarting, setIsRestarting] = useState(false);
   const [isRawDetailsOpen, setIsRawDetailsOpen] = useState(false);
 
-  const loadTunnelDetails = useCallback(async () => {
+  const parseTunnelDetailsState = useCallback((details: string) => {
+    // Check if tunnel is already hosted by looking for "Host connections"
+    const hostConnectionsMatch = details.match(/Host connections\s*:\s*(\d+)/);
+    if (hostConnectionsMatch) {
+      const hostConnections = parseInt(hostConnectionsMatch[1]);
+      const isHosted = hostConnections > 0;
+      setIsAlreadyHosted(isHosted);
+
+      // If tunnel is hosted, try to get start time
+      if (isHosted && selectedTunnel) {
+        tunnelApi.getStartTime(selectedTunnel.tunnelId)
+          .then(time => setStartTime(time))
+          .catch(error => {
+            console.log('Could not get start time:', error);
+            setStartTime(null);
+          });
+      } else {
+        setStartTime(null);
+      }
+    } else {
+      setIsAlreadyHosted(false);
+      setStartTime(null);
+    }
+  }, [selectedTunnel]);
+
+  const loadTunnelDetails = useCallback(async (forceRefresh = false) => {
     if (!selectedTunnel) return;
+
+    // Check cache first
+    if (!forceRefresh) {
+      const cached = getTunnelDetails(selectedTunnel.tunnelId);
+      if (cached) {
+        setTunnelDetails(cached);
+        // Parse cached data to update UI states
+        parseTunnelDetailsState(cached);
+        return;
+      }
+    }
 
     setIsLoading(true);
     try {
       const details = await tunnelApi.show(selectedTunnel.tunnelId);
       setTunnelDetails(details);
-
-      // Check if tunnel is already hosted by looking for "Host connections"
-      const hostConnectionsMatch = details.match(/Host connections\s*:\s*(\d+)/);
-      if (hostConnectionsMatch) {
-        const hostConnections = parseInt(hostConnectionsMatch[1]);
-        const isHosted = hostConnections > 0;
-        setIsAlreadyHosted(isHosted);
-
-        // If tunnel is hosted, try to get start time
-        if (isHosted) {
-          try {
-            const time = await tunnelApi.getStartTime(selectedTunnel.tunnelId);
-            setStartTime(time);
-          } catch (error) {
-            console.log('Could not get start time:', error);
-            setStartTime(null);
-          }
-        } else {
-          setStartTime(null);
-        }
-      } else {
-        setIsAlreadyHosted(false);
-        setStartTime(null);
-      }
+      setCachedTunnelDetails(selectedTunnel.tunnelId, details);
+      parseTunnelDetailsState(details);
     } catch (error) {
       console.error('Failed to load tunnel details:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedTunnel]);
+  }, [selectedTunnel, getTunnelDetails, setCachedTunnelDetails, parseTunnelDetailsState]);
 
   useEffect(() => {
     if (selectedTunnel) {
@@ -92,9 +106,10 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
 
       toast.success(`Tunnel ${selectedTunnel.tunnelId} is now hosting in the background!`);
 
-      // Refresh tunnel details to show URLs
+      // Invalidate cache and refresh tunnel details to show URLs
+      invalidateTunnelDetails(selectedTunnel.tunnelId);
       setTimeout(() => {
-        loadTunnelDetails();
+        loadTunnelDetails(true);
       }, TUNNEL_REFRESH_DELAY_MS);
     } catch (error) {
       toast.error(`Failed to host tunnel: ${error}`);
@@ -120,9 +135,10 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
 
       toast.success('Tunnel restarted successfully!');
 
-      // Refresh tunnel details to show new start time
+      // Invalidate cache and refresh tunnel details to show new start time
+      invalidateTunnelDetails(selectedTunnel.tunnelId);
       setTimeout(() => {
-        loadTunnelDetails();
+        loadTunnelDetails(true);
       }, TUNNEL_REFRESH_DELAY_MS);
     } catch (error) {
       toast.error(`Failed to restart tunnel: ${error}`);
@@ -304,13 +320,23 @@ export default function TunnelDetailPanel({ onRefresh: _onRefresh }: TunnelDetai
           {activeTab === 'ports' && (
             <PortManager
               tunnelId={selectedTunnel.tunnelId}
-              onPortsChanged={loadTunnelDetails}
+              onPortsChanged={() => {
+                invalidateTunnelDetails(selectedTunnel.tunnelId);
+                loadTunnelDetails(true);
+              }}
               tunnelDetails={tunnelDetails}
             />
           )}
 
           {activeTab === 'access' && (
-            <AccessControlManager tunnelId={selectedTunnel.tunnelId} />
+            <AccessControlManager
+              tunnelId={selectedTunnel.tunnelId}
+              tunnelDetails={tunnelDetails}
+              onAccessChanged={() => {
+                invalidateTunnelDetails(selectedTunnel.tunnelId);
+                loadTunnelDetails(true);
+              }}
+            />
           )}
         </div>
       </div>

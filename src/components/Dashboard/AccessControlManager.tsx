@@ -5,9 +5,11 @@ import { toast } from '../Toast';
 
 interface AccessControlManagerProps {
   tunnelId: string;
+  tunnelDetails?: string; // Pre-loaded tunnel details to avoid redundant API calls
+  onAccessChanged?: () => void;
 }
 
-export default function AccessControlManager({ tunnelId }: AccessControlManagerProps) {
+export default function AccessControlManager({ tunnelId, tunnelDetails: propTunnelDetails, onAccessChanged }: AccessControlManagerProps) {
   const [accessInfo, setAccessInfo] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<AccessPresetType>('public-demo');
@@ -17,9 +19,19 @@ export default function AccessControlManager({ tunnelId }: AccessControlManagerP
 
   useEffect(() => {
     loadAccessInfo();
-  }, [tunnelId]);
+  }, [tunnelId, propTunnelDetails]);
 
   const loadAccessInfo = async () => {
+    // If we have pre-loaded tunnel details, parse access control from it
+    if (propTunnelDetails) {
+      const accessMatch = propTunnelDetails.match(/Access control\s*:\s*(.+?)(?:\n|$)/i);
+      if (accessMatch) {
+        setAccessInfo(`Access control list for tunnel ${tunnelId}:\n  ${accessMatch[1]}`);
+        return;
+      }
+    }
+
+    // Otherwise fetch from API
     setIsLoading(true);
     try {
       const info = await accessApi.list(tunnelId);
@@ -55,6 +67,7 @@ export default function AccessControlManager({ tunnelId }: AccessControlManagerP
         entry,
       });
 
+      if (onAccessChanged) onAccessChanged();
       loadAccessInfo();
       toast.success('Access control applied successfully!');
     } catch (error) {
@@ -67,6 +80,7 @@ export default function AccessControlManager({ tunnelId }: AccessControlManagerP
 
     try {
       await accessApi.reset(tunnelId);
+      if (onAccessChanged) onAccessChanged();
       loadAccessInfo();
       toast.success('Access controls reset successfully!');
     } catch (error) {

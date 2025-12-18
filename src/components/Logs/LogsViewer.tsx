@@ -75,14 +75,14 @@ export default function LogsViewer() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="h-[calc(100vh-80px)] flex flex-col p-8">
+      <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div>
-          <h1 className="text-3xl font-bold">Logs</h1>
-          <p className="text-gray-400 mt-1">Real-time application and tunnel logs</p>
+          <h2 className="text-3xl font-semibold text-white tracking-tight">Logs</h2>
+          <p className="text-zinc-400 text-sm mt-1">Real-time application and tunnel logs</p>
         </div>
         <div className="flex gap-2">
-          <label className="flex items-center gap-2 text-sm text-gray-400">
+          <label className="flex items-center gap-2 text-sm text-zinc-400">
             <input
               type="checkbox"
               checked={autoScroll}
@@ -97,8 +97,8 @@ export default function LogsViewer() {
         </div>
       </div>
 
-      <div className="card">
-        <div className="bg-gray-950 p-4 rounded font-mono text-sm max-h-[600px] overflow-y-auto">
+      <div className="card flex-1 flex flex-col min-h-0">
+        <div className="bg-dark-950 p-4 rounded font-mono text-sm flex-1 overflow-y-auto">
           {logs.length === 0 ? (
             <div className="text-gray-500 py-4 text-center">
               No logs yet. Logs will appear here in real-time.
@@ -120,7 +120,7 @@ export default function LogsViewer() {
         </div>
       </div>
 
-      <div className="mt-4 text-xs text-gray-500">
+      <div className="mt-4 text-xs text-zinc-500 flex-shrink-0">
         <p>📊 Total logs: {logs.length}</p>
         <p>✅ Real-time logging is active. All DevTunnel operations will be logged here.</p>
       </div>
