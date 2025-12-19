@@ -1,6 +1,6 @@
 [package]
 name = "devtunnel-gui"
-version = "0.6.0"
+version = "0.6.1"
 description = "Unofficial GUI Client for Microsoft DevTunnel CLI"
 authors = ["you"]
 edition = "2021"
