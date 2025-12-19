@@ -45,15 +45,15 @@ export default {
         sans: ['Inter', 'Pretendard', 'system-ui', 'sans-serif'],
       },
       fontSize: {
-        // 25% 증가된 폰트 크기
-        'xs': ['0.9375rem', { lineHeight: '1.5' }],    // 15px (was 12px)
-        'sm': ['1.09375rem', { lineHeight: '1.6' }],   // 17.5px (was 14px)
-        'base': ['1.25rem', { lineHeight: '1.7' }],    // 20px (was 16px)
-        'lg': ['1.40625rem', { lineHeight: '1.75' }],  // 22.5px (was 18px)
-        'xl': ['1.5625rem', { lineHeight: '1.75' }],   // 25px (was 20px)
-        '2xl': ['1.875rem', { lineHeight: '2' }],      // 30px (was 24px)
-        '3xl': ['2.25rem', { lineHeight: '2.25' }],    // 36px (was 30px)
-        '4xl': ['2.8125rem', { lineHeight: '2.5' }],   // 45px (was 36px)
+        // 12.5% 증가된 폰트 크기
+        'xs': ['0.84375rem', { lineHeight: '1.5' }],    // 13.5px (was 12px)
+        'sm': ['0.984375rem', { lineHeight: '1.6' }],   // 15.75px (was 14px)
+        'base': ['1.125rem', { lineHeight: '1.7' }],    // 18px (was 16px)
+        'lg': ['1.265625rem', { lineHeight: '1.75' }],  // 20.25px (was 18px)
+        'xl': ['1.40625rem', { lineHeight: '1.75' }],   // 22.5px (was 20px)
+        '2xl': ['1.6875rem', { lineHeight: '2' }],      // 27px (was 24px)
+        '3xl': ['2.025rem', { lineHeight: '2.25' }],    // 32.4px (was 30px)
+        '4xl': ['2.53125rem', { lineHeight: '2.5' }],   // 40.5px (was 36px)
       },
       spacing: {
         '18': '4.5rem',
