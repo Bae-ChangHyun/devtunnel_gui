@@ -7,30 +7,53 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary: Indigo (세련된 블루)
+        // MONOKAI Primary (Pink/Magenta)
         primary: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
+          50: '#fdf2f8',
+          100: '#fce7f3',
+          200: '#fbcfe8',
+          300: '#f9a8d4',
+          400: '#f472b6',
+          500: '#F92672', // MONOKAI Pink
+          600: '#E11D62',
+          700: '#BE185D',
+          800: '#9D174D',
+          900: '#831843',
         },
-        // Background: 깊은 다크 톤
+        // MONOKAI Dark backgrounds
         dark: {
-          950: '#0a0a0a',
-          900: '#121212',
-          800: '#18181b',
-          700: '#27272a',
-          600: '#3f3f46',
+          950: '#1E1F1A',
+          900: '#272822', // MONOKAI 메인 배경
+          800: '#2D2E27',
+          700: '#3E3D32',
+          600: '#49483E',
+        },
+        // MONOKAI 시맨틱 색상
+        monokai: {
+          bg: '#272822',
+          fg: '#F8F8F2',
+          pink: '#F92672',
+          green: '#A6E22E',
+          cyan: '#66D9EF',
+          yellow: '#E6DB74',
+          orange: '#FD971F',
+          purple: '#AE81FF',
+          comment: '#75715E',
         },
       },
       fontFamily: {
         sans: ['Inter', 'Pretendard', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        // 25% 증가된 폰트 크기
+        'xs': ['0.9375rem', { lineHeight: '1.5' }],    // 15px (was 12px)
+        'sm': ['1.09375rem', { lineHeight: '1.6' }],   // 17.5px (was 14px)
+        'base': ['1.25rem', { lineHeight: '1.7' }],    // 20px (was 16px)
+        'lg': ['1.40625rem', { lineHeight: '1.75' }],  // 22.5px (was 18px)
+        'xl': ['1.5625rem', { lineHeight: '1.75' }],   // 25px (was 20px)
+        '2xl': ['1.875rem', { lineHeight: '2' }],      // 30px (was 24px)
+        '3xl': ['2.25rem', { lineHeight: '2.25' }],    // 36px (was 30px)
+        '4xl': ['2.8125rem', { lineHeight: '2.5' }],   // 45px (was 36px)
       },
       spacing: {
         '18': '4.5rem',

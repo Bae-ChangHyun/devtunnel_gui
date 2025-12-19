@@ -1,27 +1,39 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
+  /* MONOKAI Primary (Pink) */
+  --color-primary-50: #fdf2f8;
+  --color-primary-100: #fce7f3;
+  --color-primary-200: #fbcfe8;
+  --color-primary-300: #f9a8d4;
+  --color-primary-400: #f472b6;
+  --color-primary-500: #F92672;
+  --color-primary-600: #E11D62;
+  --color-primary-700: #BE185D;
+  --color-primary-800: #9D174D;
+  --color-primary-900: #831843;
+
+  /* MONOKAI Semantic Colors */
+  --color-monokai-bg: #272822;
+  --color-monokai-fg: #F8F8F2;
+  --color-monokai-pink: #F92672;
+  --color-monokai-green: #A6E22E;
+  --color-monokai-cyan: #66D9EF;
+  --color-monokai-yellow: #E6DB74;
+  --color-monokai-orange: #FD971F;
+  --color-monokai-purple: #AE81FF;
+  --color-monokai-comment: #75715E;
 }
 
 :root {
   font-family: 'Inter', 'Pretendard', system-ui, -apple-system, sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: 20px; /* 16px -> 20px (25% 증가) */
+  line-height: 1.7;
   font-weight: 400;
 
   color-scheme: dark;
-  color: #f4f4f5;
-  background-color: #121212;
+  color: #F8F8F2; /* MONOKAI fg */
+  background-color: #272822; /* MONOKAI bg */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -34,11 +46,11 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #121212;
+  background-color: #272822; /* MONOKAI bg */
 }
 
 .btn-primary {
-  background-color: var(--color-primary-600);
+  background-color: #F92672; /* MONOKAI pink */
   color: white;
   padding: 0.625rem 1.25rem;
   border-radius: 0.5rem;
@@ -48,7 +60,7 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-700);
+  background-color: #E11D62;
   transform: translateY(-1px);
 }
 
@@ -62,8 +74,8 @@ body {
 }
 
 .btn-secondary {
-  background-color: #3f3f46;
-  color: #f4f4f5;
+  background-color: #3E3D32; /* MONOKAI dark-700 */
+  color: #F8F8F2;
   padding: 0.625rem 1.25rem;
   border-radius: 0.5rem;
   font-weight: 500;
@@ -72,11 +84,11 @@ body {
 }
 
 .btn-secondary:hover {
-  background-color: #52525b;
+  background-color: #49483E; /* MONOKAI dark-600 */
 }
 
 .btn-danger {
-  background-color: #ef4444;
+  background-color: #F92672; /* MONOKAI pink */
   color: white;
   padding: 0.625rem 1.25rem;
   border-radius: 0.5rem;
@@ -86,11 +98,11 @@ body {
 }
 
 .btn-danger:hover {
-  background-color: #dc2626;
+  background-color: #BE185D;
 }
 
 .card {
-  background-color: #27272a;
+  background-color: #2D2E27; /* MONOKAI dark-800 */
   border: none;
   border-radius: 0.75rem;
   padding: 1.5rem;
@@ -98,19 +110,19 @@ body {
 }
 
 .input-field {
-  background-color: #27272a;
-  border: 1px solid #3f3f46;
+  background-color: #2D2E27; /* MONOKAI dark-800 */
+  border: 1px solid #3E3D32; /* MONOKAI dark-700 */
   border-radius: 0.5rem;
   padding: 0.625rem 0.875rem;
-  color: #f4f4f5;
+  color: #F8F8F2;
   font-size: 0.875rem;
   transition: all 0.2s ease;
 }
 
 .input-field:focus {
   outline: none;
-  border-color: var(--color-primary-500);
-  background-color: #18181b;
+  border-color: #F92672; /* MONOKAI pink */
+  background-color: #272822;
 }
 
 .badge {
@@ -123,23 +135,23 @@ body {
 }
 
 .badge-success {
-  background-color: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
+  background-color: rgba(166, 226, 46, 0.1); /* MONOKAI green */
+  color: #A6E22E;
 }
 
 .badge-warning {
-  background-color: rgba(251, 191, 36, 0.1);
-  color: #fbbf24;
+  background-color: rgba(230, 219, 116, 0.1); /* MONOKAI yellow */
+  color: #E6DB74;
 }
 
 .badge-danger {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background-color: rgba(249, 38, 114, 0.1); /* MONOKAI pink */
+  color: #F92672;
 }
 
 .badge-info {
-  background-color: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
+  background-color: rgba(102, 217, 239, 0.1); /* MONOKAI cyan */
+  color: #66D9EF;
 }
 
 /* Status Dot */
@@ -151,14 +163,14 @@ body {
 }
 
 .status-dot-active {
-  background-color: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+  background-color: #A6E22E; /* MONOKAI green */
+  box-shadow: 0 0 0 3px rgba(166, 226, 46, 0.2);
 }
 
 .status-dot-stopped {
-  background-color: #71717a;
+  background-color: #75715E; /* MONOKAI comment */
 }
 
 .status-dot-expired {
-  background-color: #ef4444;
+  background-color: #F92672; /* MONOKAI pink */
 }

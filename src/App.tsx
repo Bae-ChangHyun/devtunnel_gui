@@ -3,12 +3,14 @@ import { useAuthStore } from './stores/authStore';
 import { useUiStore } from './stores/uiStore';
 import { useTunnelStore } from './stores/tunnelStore';
 import { authApi } from './lib/api';
+import { useAuthHealthCheck } from './hooks/useAuthHealthCheck';
 import Dashboard from './components/Dashboard/Dashboard';
 import LogsViewer from './components/Logs/LogsViewer';
 import Settings from './components/Settings/Settings';
 import LoginScreen from './components/Auth/LoginScreen';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
+import { SessionExpiredModal } from './components/SessionExpiredModal';
 import { ToastContainer } from './components/Toast';
 import './index.css';
 
@@ -17,6 +19,9 @@ function App() {
   const { activeTab } = useUiStore();
   const { clearAllCache } = useTunnelStore();
   const [isChecking, setIsChecking] = useState(true);
+
+  // 인증 헬스체크 활성화
+  useAuthHealthCheck();
 
   useEffect(() => {
     checkAuthStatus();
@@ -73,6 +78,7 @@ function App() {
         </div>
       </div>
       <ToastContainer />
+      <SessionExpiredModal />
     </div>
   );
 }
